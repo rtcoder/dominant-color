@@ -1,4 +1,4 @@
-import { getDominantColor } from '../../../lib/dominant-color.js';
+import { getDominantColor } from '../../../dist/dominant-color.js';
 
 function callbackAfterGetColor(imgNode) {
   return (color, colors) => {

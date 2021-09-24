@@ -1,5 +1,6 @@
-import { getDominantColor } from '../../../lib/dominant-color.js';
+import { getDominantColor } from '../../../dist/dominant-color.js';
 
+const songs = [];
 let timer = null;
 let mousePosOnSlideStartX = 0;
 let mousePosOnSlideCurrentX = 0;
@@ -10,8 +11,7 @@ let tmpSlidesWrapperOffset = 0;
 const slideWidth = 278;
 let currentSlide = 0;
 let currentSongTime = 0;
-const maxSongTime = 132;
-let isPlay = true;
+let isPlay = false;
 const repeatOptions = {
   NONE: 0,
   ONE: 1,
@@ -28,6 +28,10 @@ const currentTime = musicAppContainer.querySelector('.time');
 const bar = musicAppContainer.querySelector('.bar');
 const playPause = musicAppContainer.querySelector('.play-pause');
 const repeatBtn = musicAppContainer.querySelector('.repeat');
+const titleDiv = musicAppContainer.querySelector('.title');
+const authorDiv = musicAppContainer.querySelector('.author');
+const statusDiv = musicAppContainer.querySelector('.status');
+const songTimeDiv = musicAppContainer.querySelector('.length');
 sliderContainer.addEventListener('mousedown', mouseDownOnSlide);
 bar.addEventListener('mousedown', mouseDownOnBar);
 window.addEventListener('mouseup', mouseUp);
@@ -38,6 +42,11 @@ musicAppContainer.querySelector('.next').addEventListener('click', nextSong);
 musicAppContainer.querySelector('.prev').addEventListener('click', prevSong);
 playPause.addEventListener('click', playOrPause);
 repeatBtn.addEventListener('click', toggleRepeat);
+
+function maxSongTime() {
+  const { duration } = songs[currentSlide].sound;
+  return isNaN(duration) ? 0 : parseInt(duration);
+}
 
 function mouseUp() {
   if (isMouseDownOnBar) {
@@ -87,7 +96,7 @@ function setBarPos(e) {
     leftPos = width;
   }
   const percentVal = percent(leftPos, width);
-  currentSongTime = parseInt((percentVal / 100) * maxSongTime);
+  currentSongTime = parseInt((percentVal / 100) * maxSongTime());
   updateSongTime();
 }
 
@@ -108,8 +117,22 @@ function mouseUpOnSlide() {
   const oldSlide = currentSlide;
   currentSlide = Math.round((tmpSlidesWrapperOffset / slideWidth) * -1);
   updateBackgroundColor();
+  updateTitleAndAuthor();
   if (oldSlide !== currentSlide) {
     resetSongTime();
+    songs.forEach(song => {
+      song.sound.currentTime = 0;
+      song.sound.pause();
+    });
+    if (isPlay) {
+      songs[currentSlide].sound.play();
+    }
+    const minutes = Math.floor(maxSongTime() / 60);
+    let seconds = maxSongTime() - minutes * 60;
+    if (seconds < 10) {
+      seconds = `0${seconds}`;
+    }
+    songTimeDiv.innerText = `${minutes}:${seconds}`;
   }
   slidesWrapperOffset = (currentSlide * slideWidth) * -1;
   slidesWrapper.style.marginLeft = `${slidesWrapperOffset}px`;
@@ -155,9 +178,23 @@ function nextSong() {
   if (currentSlide >= slidesCount) {
     currentSlide = 0;
   }
+  updateTitleAndAuthor();
   updateBackgroundColor();
   slidesWrapperOffset = (currentSlide * slideWidth) * -1;
   slidesWrapper.style.marginLeft = `${slidesWrapperOffset}px`;
+  songs.forEach(song => {
+    song.sound.currentTime = 0;
+    song.sound.pause();
+  });
+  if (isPlay) {
+    songs[currentSlide].sound.play();
+  }
+  const minutes = Math.floor(maxSongTime() / 60);
+  let seconds = maxSongTime() - minutes * 60;
+  if (seconds < 10) {
+    seconds = `0${seconds}`;
+  }
+  songTimeDiv.innerText = `${minutes}:${seconds}`;
 }
 
 function prevSong() {
@@ -170,9 +207,24 @@ function prevSong() {
   if (currentSlide <= 0) {
     currentSlide = slidesCount - 1;
   }
+  updateTitleAndAuthor();
   updateBackgroundColor();
   slidesWrapperOffset = (currentSlide * slideWidth) * -1;
   slidesWrapper.style.marginLeft = `${slidesWrapperOffset}px`;
+  songs.forEach(song => {
+    song.sound.currentTime = 0;
+    song.sound.pause();
+  });
+  if (isPlay) {
+    songs[currentSlide].sound.play();
+  }
+  const minutes = Math.floor(maxSongTime() / 60);
+  let seconds = maxSongTime() - minutes * 60;
+  if (seconds < 10) {
+    seconds = `0${seconds}`;
+  }
+  songTimeDiv.innerText = `${minutes}:${seconds}`;
+
 }
 
 function playOrPause() {
@@ -183,9 +235,13 @@ function playOrPause() {
   if (isPlay) {
     runTimer();
     playPause.classList.add('play');
+    statusDiv.innerHTML = '';
+    songs[currentSlide].sound.play();
   } else {
     stopTimer();
     playPause.classList.add('pause');
+    statusDiv.innerHTML = 'Paused';
+    songs[currentSlide].sound.pause();
   }
 }
 
@@ -205,11 +261,13 @@ function updateSongTime() {
     seconds = `0${seconds}`;
   }
   currentTime.innerText = `${minutes}:${seconds}`;
-  update();
+
+  songs[currentSlide].sound.currentTime = currentSongTime;
+  updateProgressVal();
 }
 
-function update() {
-  bar.style.setProperty('--progresVal', percent(currentSongTime, maxSongTime) + '%');
+function updateProgressVal() {
+  bar.style.setProperty('--progresVal', percent(currentSongTime, maxSongTime()) + '%');
 }
 
 function toggleRepeat() {
@@ -246,7 +304,7 @@ function runTimer() {
       return;
     }
     currentSongTime++;
-    if (currentSongTime > maxSongTime) {
+    if (currentSongTime > maxSongTime()) {
       switch (repeatSong) {
         case repeatOptions.NONE:
           if (currentSlide >= slidesCount - 1) {
@@ -273,10 +331,22 @@ function stopTimer() {
   timer = null;
 }
 
+function updateTitleAndAuthor() {
+  titleDiv.innerHTML = songs[currentSlide].name;
+  authorDiv.innerHTML = songs[currentSlide].author;
+}
 
 fetch('./json/tracks.json')
   .then(res => res.json())
   .then(jsonArr => {
+    jsonArr.forEach(track => {
+      const sound = new Audio(track.audio);
+      songs.push({
+        name: track.name,
+        author: track.author,
+        sound,
+      });
+    });
     const html = jsonArr.map(json => {
       return `
             <div class='slide'>
@@ -295,14 +365,18 @@ fetch('./json/tracks.json')
     getDominantColor(imgNode, {
       downScaleFactor: 1,
       skipPixels: 1,
-      paletteWithCountOfOccurrences: true,
-      callback: (color,pallete) => {
-        console.log({color,pallete})
+      callback: (color) => {
         imgNode.parentNode.parentNode.style.setProperty('--dominant-color-img', `rgb(${color})`);
-        // updateBackgroundColor();
+        updateBackgroundColor();
+        updateTitleAndAuthor();
+        const minutes = Math.floor(maxSongTime() / 60);
+        let seconds = maxSongTime() - minutes * 60;
+        if (seconds < 10) {
+          seconds = `0${seconds}`;
+        }
+        songTimeDiv.innerText = `${minutes}:${seconds}`;
       },
     });
   });
 });
 
-runTimer();

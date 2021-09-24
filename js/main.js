@@ -178,11 +178,11 @@ function parseHSL(str) {
 function harmonize(color, start, end, interval, range = 360) {
   const colors = [color];
   const [h, s, l] = parseHSL(color);
-  console.log({h,s,l})
+  console.log({ h, s, l });
 
   for (let i = start; i <= end; i += interval) {
     const h1 = (h + i) % range;
-    const l1 = 100-l;
+    const l1 = 100 - l;
     const c1 = `hsl(${h1}, ${s}%, ${l1}%)`;
     colors.push(c1);
   }

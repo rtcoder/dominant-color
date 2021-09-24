@@ -6,17 +6,18 @@
 }
 
 .music-app-example .phone-container {
+    --app-dominant-color: transparent;
+    --app-triad-color-2: transparent;
+    --app-triad-color-1: transparent;
+    --shadow: 5px 5px 10px rgba(0, 0, 0, .1), -5px -5px 10px rgba(255, 255, 255, .2);
     width: 300px;
     height: 600px;
     display: flex;
-    border: 1px solid;
+    border: 2px solid rgba(0, 0, 0, 0.3);
     padding: 10px;
     border-radius: 30px;
     overflow: hidden;
     user-select: none;
-    --app-dominant-color: transparent;
-    --app-triad-color-2: transparent;
-    --app-triad-color-1: transparent;
     background: var(--app-dominant-color);
     transition: background 0.4s ease-in-out;
 }
@@ -25,10 +26,18 @@
     width: 100%;
     flex-direction: column;
     display: flex;
-    border: 1px solid;
     border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 5px 5px 10px rgba(255, 255, 255, .2), -5px -5px 10px rgba(255, 255, 255, .2);
 }
 
+.music-app-example .app .title {
+    color: var(--app-triad-color-1);
+}
+
+.music-app-example .app .author {
+    color: var(--app-triad-color-2);
+}
 
 .music-app-example .app-header {
     width: 100%;
@@ -36,14 +45,18 @@
     flex-direction: row;
     padding: 20px 5px;
     justify-content: space-between;
+    align-items: center;
 }
 
+.music-app-example .app-header .status {
+    font-size: 12px;
+    color: var(--app-triad-color-1);
+}
 
 .music-app-example .slides-container {
     width: 100%;
     display: flex;
     padding: 40px 0 10px;
-    overflow: hidden;
 }
 
 .music-app-example .slides {
@@ -69,8 +82,10 @@
     height: 200px;
     display: flex;
     flex-direction: row;
+    border-radius: 200px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
 }
-
 
 .music-app-example .title,
 .music-app-example .author {
@@ -89,12 +104,11 @@
     font-size: 12px;
 }
 
-
 .music-app-example .controls {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 25px 10px;
+    padding: 25px 10px 20px;
 }
 
 .music-app-example .controls .progress {
@@ -111,11 +125,10 @@
     border-radius: 10px;
     margin: 0 10px;
     position: relative;
-    overflow: hidden;
     --progresVal: 0%;
-    --bg-bar-color:var(--app-triad-color-2);
-    box-shadow: inset 0px 0px 3px 0 rgba(0, 0, 0, 0.20),
-    inset 0px 0px 3px 0 rgba(255, 255, 255, 0.5);
+    --bg-bar-color: var(--app-triad-color-2);
+    box-shadow: var(--shadow);
+    cursor: pointer;
 }
 
 .music-app-example .controls .progress .bar::before {
@@ -129,6 +142,25 @@
     border-radius: 10px;
     box-shadow: inset 8px 8px 16px 0 rgba(0, 0, 0, 0.2),
     inset -8px -8px 16px 0 rgba(255, 255, 255, 0.4);
+}
+
+.music-app-example .controls .progress .bar::after {
+    content: '';
+    left: var(--progresVal);
+    position: absolute;
+    top: 50%;
+    height: 0;
+    width: 0;
+    background: var(--app-triad-color-1);
+    border-radius: 10px;
+    transform: translate(-50%, -50%);
+    transition: 0.2s ease-in-out;
+    transition-property: width, height;
+}
+
+.music-app-example .controls .progress .bar:active::after {
+    height: 15px;
+    width: 15px;
 }
 
 .music-app-example .controls .progress .time,
@@ -161,10 +193,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    background: #fff;
     cursor: pointer;
-    border:1px solid #000;
-    color: var(--app-dominant-color);
 }
 
 .music-app-example .controls .buttons .play-pause {
@@ -172,17 +201,11 @@
     height: 70px;
 }
 
-.music-app-example .controls .buttons .play-pause.play .play,
-.music-app-example .controls .buttons .play-pause.pause .pause {
-    display: none;
-}
-
 .music-app-example .controls .buttons .prev,
 .music-app-example .controls .buttons .next {
     width: 60px;
     height: 60px;
 }
-
 
 .music-app-example .app-footer {
     width: 100%;
@@ -196,12 +219,32 @@
     cursor: pointer;
 }
 
+.music-app-example .app-header .back-button,
+.music-app-example .app-header .more,
 .music-app-example .app-footer .repeat,
-.music-app-example .app-footer .options {
-    color: var(--app-dominant-color);
-    /*style*/
+.music-app-example .app-footer .options,
+.music-app-example .controls .buttons .play-pause,
+.music-app-example .controls .buttons .prev,
+.music-app-example .controls .buttons .next {
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--app-triad-color-1);
+    box-shadow: var(--shadow);
+    transition: color 0.4s ease-in-out;
 }
 
+.music-app-example .app-header .back-button,
+.music-app-example .app-header .more,
+.music-app-example .app-footer .repeat,
+.music-app-example .app-footer .options {
+    border-radius: 10px;
+    padding: 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.music-app-example .controls .buttons .play-pause.play .play,
+.music-app-example .controls .buttons .play-pause.pause .pause,
 .music-app-example .app-footer .repeat.none .one,
 .music-app-example .app-footer .repeat.none .all,
 .music-app-example .app-footer .repeat.one .none,
