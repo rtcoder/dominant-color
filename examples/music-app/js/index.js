@@ -1,5 +1,6 @@
 import { getDominantColor } from '../../../dist/dominant-color.js';
 
+let currentVolume = 1;
 const songs = [];
 let timer = null;
 let mousePosOnSlideStartX = 0;
@@ -32,6 +33,7 @@ const titleDiv = musicAppContainer.querySelector('.title');
 const authorDiv = musicAppContainer.querySelector('.author');
 const statusDiv = musicAppContainer.querySelector('.status');
 const songTimeDiv = musicAppContainer.querySelector('.length');
+const volumeDiv = musicAppContainer.querySelector('.volume');
 sliderContainer.addEventListener('mousedown', mouseDownOnSlide);
 bar.addEventListener('mousedown', mouseDownOnBar);
 window.addEventListener('mouseup', mouseUp);
@@ -42,6 +44,7 @@ musicAppContainer.querySelector('.next').addEventListener('click', nextSong);
 musicAppContainer.querySelector('.prev').addEventListener('click', prevSong);
 playPause.addEventListener('click', playOrPause);
 repeatBtn.addEventListener('click', toggleRepeat);
+volumeDiv.addEventListener('click', toggleVolume);
 
 function maxSongTime() {
   const { duration } = songs[currentSlide].sound;
@@ -103,12 +106,13 @@ function setBarPos(e) {
 function mouseDownOnSlide(e) {
   const { pageX } = e;
   mousePosOnSlideStartX = pageX;
+  mousePosOnSlideCurrentX = pageX;
   isMouseDownOnSlide = true;
   slidesWrapper.style.transitionDuration = '0s';
 }
 
 function mouseUpOnSlide() {
-  if (!isMouseDownOnSlide) {
+  if (!isMouseDownOnSlide || mousePosOnSlideCurrentX === mousePosOnSlideStartX) {
     return;
   }
   resetMousePosition();
@@ -268,6 +272,19 @@ function updateSongTime() {
 
 function updateProgressVal() {
   bar.style.setProperty('--progresVal', percent(currentSongTime, maxSongTime()) + '%');
+}
+
+function toggleVolume() {
+  currentVolume = !currentVolume ? 1 : 0;
+  songs.forEach(song => {
+    song.sound.volume = currentVolume;
+  });
+  volumeDiv.classList.remove('on', 'off');
+  if (currentVolume) {
+    volumeDiv.classList.add('on');
+  } else {
+    volumeDiv.classList.add('off');
+  }
 }
 
 function toggleRepeat() {
