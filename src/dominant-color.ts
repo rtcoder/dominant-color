@@ -11,12 +11,13 @@ interface DominantColorOptions {
   downScaleFactor: number;
   skipPixels: number;
   colorsPaletteLength: number;
+  paletteWithCountOfOccurrences: boolean;
   callback: DominantColorCallback;
 }
 
-type DominantColorCallback = (color: string, colors: string[]) => void;
+type DominantColorCallback = (color: string, colors: (string[]) | (PrimaryColor[])) => void;
 
-const isApproximateColor = (color1: string, color2: string, threshold = 100): boolean => {
+const isApproximateColor = (color1: string, color2: string, threshold = 25): boolean => {
   if (!color1 || !color2) {
     return false;
   }
@@ -63,13 +64,22 @@ const getImageData = (img: HTMLImageElement, downScaleFactor = 1): ImageData => 
   return context.getImageData(0, 0, img.width, img.height);
 };
 
-const sortColors = (colors: Colors) => Object.keys(colors).sort((a, b) => colors[b] - colors[a]);
+const sortColors = (colors: Colors, withOccurrences = false): (string[]) | PrimaryColor[] => {
+  const sorted = Object.keys(colors).sort((a, b) => colors[b] - colors[a]);
+  return withOccurrences
+    ? sorted.map(color => ({
+      rgb: color,
+      count: colors[color],
+    }))
+    : sorted;
+};
 
 export function getDominantColor(element: HTMLImageElement, options: DominantColorOptions) {
   const defaultOptions = {
     downScaleFactor: 1,
     skipPixels: 0,
     colorsPaletteLength: 5,
+    paletteWithCountOfOccurrences: false,
     callback: null,
   };
   options = Object.assign(defaultOptions, options);
@@ -79,7 +89,7 @@ export function getDominantColor(element: HTMLImageElement, options: DominantCol
     const imageData = getImageData(e.currentTarget as HTMLImageElement, options.downScaleFactor);
     const [primaryColor, colors] = detectColor(imageData, options.skipPixels);
     if (typeof options.callback === 'function') {
-      options.callback(primaryColor.rgb, sortColors(colors).slice(0, options.colorsPaletteLength));
+      options.callback(primaryColor.rgb, sortColors(colors, options.paletteWithCountOfOccurrences).slice(0, options.colorsPaletteLength));
     }
   };
 

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Out of the grave (feat. ENROSA)",
+    "author": "Abandoned",
+    "audio": "./audio/Abandoned - Out Of The Grave (Feat. ENROSA) [NCS Release].mp3",
+    "cover": "./img/Abandoned - Out Of The Grave (Feat. ENROSA) [NCS Release].jpg"
+  },
+  {
+    "name": "Heart",
+    "author": "Alex Skrindo, Severin Like Lions",
+    "audio": "./audio/Alex Skrindo, Severin  Like Lions - Heart [NCS Release].mp3",
+    "cover": "./img/Alex Skrindo, Severin & Like Lions - Heart [NCS Release].jpg"
+  },
+  {
+    "name": "Out of the grave (feat. ENROSA)",
+    "author": "Abandoned",
+    "audio": "./audio/Abandoned - Out Of The Grave (Feat. ENROSA) [NCS Release].mp3",
+    "cover": "./img/Diamond Eyes - Father [NCS Release].jpg"
+  },
+  {
+    "name": "Out of the grave (feat. ENROSA)",
+    "author": "Abandoned",
+    "audio": "./audio/Abandoned - Out Of The Grave (Feat. ENROSA) [NCS Release].mp3",
+    "cover": "./img/NATSUMI - Take Me Away [NCS Release].jpg"
+  },
+  {
+    "name": "Out of the grave (feat. ENROSA)",
+    "author": "Abandoned",
+    "audio": "./audio/Abandoned - Out Of The Grave (Feat. ENROSA) [NCS Release].mp3",
+    "cover": "./img/Zack Merci  Arcana - Love Potion [NCS Release].jpg"
+  }
+]

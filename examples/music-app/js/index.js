@@ -1,4 +1,4 @@
-import { getDominantColor } from '../lib/dominant-color.js';
+import { getDominantColor } from '../../../lib/dominant-color.js';
 
 let timer = null;
 let mousePosOnSlideStartX = 0;
@@ -22,8 +22,8 @@ const musicAppContainer = document.querySelector('.music-app-example');
 const phoneContainer = musicAppContainer.querySelector('.phone-container');
 const sliderContainer = musicAppContainer.querySelector('.slides-container');
 const slidesWrapper = sliderContainer.querySelector('.slides');
-const slides = slidesWrapper.querySelectorAll('.slide');
-const slidesCount = [...slides].length;
+let slides = slidesWrapper.querySelectorAll('.slide');
+let slidesCount = [...slides].length;
 const currentTime = musicAppContainer.querySelector('.time');
 const bar = musicAppContainer.querySelector('.bar');
 const playPause = musicAppContainer.querySelector('.play-pause');
@@ -66,7 +66,6 @@ function mouseUpOnBar() {
   if (!isMouseDownOnBar) {
     return;
   }
-  console.log('mouseUp');
   isMouseDownOnBar = false;
   resetMousePosition();
 }
@@ -103,7 +102,6 @@ function mouseUpOnSlide() {
   if (!isMouseDownOnSlide) {
     return;
   }
-  console.log('mouseUp');
   resetMousePosition();
   isMouseDownOnSlide = false;
   slidesWrapper.style.transitionDuration = '0.4s';
@@ -134,7 +132,6 @@ function resetMousePosition() {
 
 function setOffset() {
   const offset = slidesWrapperOffset + (mousePosOnSlideCurrentX - mousePosOnSlideStartX);
-  console.log(offset);
   if (offset > slideWidth / 2 || offset < -(((slidesCount - 1) * slideWidth) + (slideWidth / 2))) {
     return;
   }
@@ -147,7 +144,7 @@ function updateBackgroundColor() {
   const color = slide.style.getPropertyValue('--dominant-color-img');
   phoneContainer.style.setProperty('--app-dominant-color', color);
   const hsl = RGBToHSL(color);
-  const triadColors = triadColor(hsl)
+  const triadColors = triadColor(hsl);
   phoneContainer.style.setProperty('--app-triad-color-1', triadColors[1]);
   phoneContainer.style.setProperty('--app-triad-color-2', triadColors[2]);
 }
@@ -277,17 +274,35 @@ function stopTimer() {
 }
 
 
-fetch('./json/tracks.json').then(value => {console.log(value)});
+fetch('./json/tracks.json')
+  .then(res => res.json())
+  .then(jsonArr => {
+    const html = jsonArr.map(json => {
+      return `
+            <div class='slide'>
+              <div class='image'>
+                <img src='${json.cover}' alt=''>
+              </div>
+            </div>
+`;
+    }).join('');
+    slidesWrapper.innerHTML = html;
+    slides = slidesWrapper.querySelectorAll('.slide');
+    slidesCount = [...slides].length;
+  }).then(() => {
 
-[...slidesWrapper.querySelectorAll('img')].forEach(imgNode => {
-  getDominantColor(imgNode, {
-    downScaleFactor: 10,
-    skipPixels: 10,
-    colorsPaletteLength: 7,
-    callback: (color) => {
-      imgNode.parentNode.parentNode.style.setProperty('--dominant-color-img', `rgb(${color})`);
-      updateBackgroundColor();
-    },
+  [...slidesWrapper.querySelectorAll('img')].forEach(imgNode => {
+    getDominantColor(imgNode, {
+      downScaleFactor: 1,
+      skipPixels: 1,
+      paletteWithCountOfOccurrences: true,
+      callback: (color,pallete) => {
+        console.log({color,pallete})
+        imgNode.parentNode.parentNode.style.setProperty('--dominant-color-img', `rgb(${color})`);
+        // updateBackgroundColor();
+      },
+    });
   });
 });
+
 runTimer();
