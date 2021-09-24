@@ -208,7 +208,7 @@ function prevSong() {
   }
   resetSongTime();
   currentSlide--;
-  if (currentSlide <= 0) {
+  if (currentSlide < 0) {
     currentSlide = slidesCount - 1;
   }
   updateTitleAndAuthor();
