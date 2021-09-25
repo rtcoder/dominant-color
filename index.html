@@ -1,79 +1,43 @@
 <!doctype html>
-<html lang="en">
+<html lang='en'>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Get dominant color</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap">
-
-    <style>
-        #drop-area {
-            border: 2px dashed #ccc;
-            border-radius: 20px;
-            width: 480px;
-            font-family: sans-serif;
-            margin: 100px auto;
-            padding: 20px;
-            display: flex;
-        }
-
-        #drop-area.highlight {
-            border-color: purple;
-        }
-
-        #gallery {
-            margin-top: 10px;
-        }
-
-        #gallery img {
-            width: 150px;
-            margin-bottom: 10px;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-
-        input {
-            display: none;
-        }
-
-    </style>
-
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+        content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Get dominant color</title>
+  <link rel='stylesheet' href='css/index.css'>
 </head>
 <body>
 <header>
-    <ul>
-        <li><a href="/dominant-color/">Home</a></li>
-        <li><a href="/dominant-color/documentation.html">Documentation</a></li>
-        <li>
-            <a href="#">Examples</a>
-            <ul>
-                <li><a href="/dominant-color/examples/palette">Palette</a></li>
-                <li><a href="/dominant-color/examples/music-app">Music app</a></li>
-            </ul>
-        </li>
-        <li>Download</li>
-    </ul>
+  <ul>
+    <li class='active'><a href='/dominant-color/'>Home</a></li>
+    <li><a href='/dominant-color/documentation.html'>Documentation</a></li>
+    <li>
+      <a href='#'>Examples</a>
+      <ul>
+        <li><a href='/dominant-color/examples/palette'>Palette</a></li>
+        <li><a href='/dominant-color/examples/music-app'>Music app</a></li>
+      </ul>
+    </li>
+    <li>Download</li>
+  </ul>
 </header>
 
-<div class="content">
+<div class='container'>
 
-    <label class="button" id="drop-area">
-        Drop images here or select from your device
-        <input type="file" multiple accept="image/*" onchange="handleFiles(this.files)">
-    </label>
-    <div id="gallery"></div>
+  <h2>Get dominant color of image</h2>
+  <p>Upload image below and check the dominant color of image</p>
 
+  <label id='drop-area'>
+    Drop images here or select from your device
+    <input type='file' multiple accept='image/*' onchange='handleFiles(this.files)'>
+  </label>
+  <div id='gallery'></div>
 
 </div>
 
-<script src="./js/main.js"></script>
-<script type="module" src="js/index.js"></script>
+<script type='module' src='js/index.js'></script>
 
 </body>
 </html>

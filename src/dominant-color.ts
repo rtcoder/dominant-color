@@ -1,3 +1,5 @@
+type ColorFormat = 'rgb' | 'hsl' | 'hex';
+
 interface PrimaryColor {
   rgb: string;
   count: number;
@@ -12,6 +14,7 @@ interface DominantColorOptions {
   skipPixels: number;
   colorsPaletteLength: number;
   paletteWithCountOfOccurrences: boolean;
+  colorFormat: ColorFormat;
   callback: DominantColorCallback;
 }
 
@@ -75,12 +78,15 @@ const sortColors = (colors: Colors, withOccurrences = false): (string[]) | Prima
 };
 
 export function getDominantColor(element: HTMLImageElement, options: DominantColorOptions) {
-  const defaultOptions = {
+  const defaultOptions: DominantColorOptions = {
     downScaleFactor: 1,
     skipPixels: 0,
     colorsPaletteLength: 5,
     paletteWithCountOfOccurrences: false,
-    callback: null,
+    colorFormat: 'rgb',
+    callback: () => {
+      // callback
+    },
   };
   options = Object.assign(defaultOptions, options);
   const img = new Image();
