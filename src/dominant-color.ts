@@ -146,7 +146,7 @@ const getColorByFormat = (color: string, format: ColorFormat): string => {
   return color;
 };
 
-export function getDominantColor(element: HTMLImageElement, options: DominantColorOptions) {
+export function getDominantColor(element: HTMLImageElement, options: Partial<DominantColorOptions>) {
   const defaultOptions: DominantColorOptions = {
     downScaleFactor: 1,
     skipPixels: 0,
