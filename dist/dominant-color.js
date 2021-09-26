@@ -144,7 +144,9 @@ export function getDominantColor(element, options) {
         const imageData = getImageData(e.currentTarget, options.downScaleFactor);
         const [primaryColor, colors] = detectColor(imageData, options.skipPixels);
         if (typeof options.callback === 'function') {
-            const colorsPalette = sortColors(colors, options.paletteWithCountOfOccurrences).slice(0, options.colorsPaletteLength);
+            const colorsPalette = options.colorsPaletteLength
+                ? sortColors(colors, options.paletteWithCountOfOccurrences).slice(0, options.colorsPaletteLength)
+                : [];
             const dominant = getColorByFormat(primaryColor.color, defaultOptions.colorFormat);
             options.callback(dominant, colorsPalette);
         }
