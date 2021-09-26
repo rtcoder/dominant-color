@@ -1,6 +1,6 @@
 {
   "name": "@rtcoder/dominant-color",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Get dominant color and palette of colors from an image",
   "main": "dist/dominant-color.js",
   "types": "dist/dominant-color.d.ts",
@@ -30,7 +30,7 @@
   "bugs": {
     "url": "https://github.com/rtcoder/dominant-color/issues"
   },
-  "homepage": "https://github.com/rtcoder/dominant-color#readme",
+  "homepage": "https://rtcoder.github.io/dominant-color/",
   "devDependencies": {
     "@types/jest": "^27.0.2",
     "jest": "^27.2.1",

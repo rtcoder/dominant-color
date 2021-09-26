@@ -164,7 +164,9 @@ export function getDominantColor(element: HTMLImageElement, options: Partial<Dom
     const imageData = getImageData(e.currentTarget as HTMLImageElement, options.downScaleFactor);
     const [primaryColor, colors] = detectColor(imageData, options.skipPixels);
     if (typeof options.callback === 'function') {
-      const colorsPalette = sortColors(colors, options.paletteWithCountOfOccurrences).slice(0, options.colorsPaletteLength);
+      const colorsPalette = options.colorsPaletteLength
+        ? sortColors(colors, options.paletteWithCountOfOccurrences).slice(0, options.colorsPaletteLength)
+        : [];
       const dominant = getColorByFormat(primaryColor.color, defaultOptions.colorFormat);
       options.callback(dominant, colorsPalette);
     }
