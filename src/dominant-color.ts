@@ -1,24 +1,78 @@
-type ColorFormat = 'rgb' | 'hsl' | 'hex';
+import { ColorFormat, Colors, DominantColorOptions, PrimaryColor } from './interface';
 
-interface PrimaryColor {
-  rgb: string;
-  count: number;
-}
+const rgbToHex = (rgb: string): string => {
+  // Choose correct separator
+  const sep = rgb.indexOf(',') > -1 ? ',' : ' ';
+  // Turn "rgb(r,g,b)" into [r,g,b]
+  const _rgb = rgb.substr(4).split(')')[0].split(sep);
 
-interface Colors {
-  [key: string]: number;
-}
+  let r = (+_rgb[0]).toString(16);
+  let g = (+_rgb[1]).toString(16);
+  let b = (+_rgb[2]).toString(16);
 
-interface DominantColorOptions {
-  downScaleFactor: number;
-  skipPixels: number;
-  colorsPaletteLength: number;
-  paletteWithCountOfOccurrences: boolean;
-  colorFormat: ColorFormat;
-  callback: DominantColorCallback;
-}
+  if (r.length === 1)
+    r = '0' + r;
+  if (g.length === 1)
+    g = '0' + g;
+  if (b.length === 1)
+    b = '0' + b;
 
-type DominantColorCallback = (color: string, colors: (string[]) | (PrimaryColor[])) => void;
+  return '#' + r + g + b;
+};
+
+const rgbToHsl = (rgb: string): string => {
+  const sep = rgb.indexOf(',') > -1 ? ',' : ' ';
+  const _rgb: any[] = rgb.substr(4)
+    .split(')')[0]
+    .split(sep)
+    .map(c => c.indexOf('%') > -1
+      ? Math.round((+c.substr(0, c.length - 1)) / 100 * 255)
+      : c,
+    );
+
+  // Make r, g, and b fractions of 1
+  const r = _rgb[0] / 255;
+  const g = _rgb[1] / 255;
+  const b = _rgb[2] / 255;
+
+  // Find greatest and smallest channel values
+  const cmin = Math.min(r, g, b);
+  const cmax = Math.max(r, g, b);
+  const delta = cmax - cmin;
+  let h = 0;
+  let s = 0;
+  let l = 0;
+  // Calculate hue
+  // No difference
+  if (delta === 0)
+    h = 0;
+  // Red is max
+  else if (cmax === r)
+    h = ((g - b) / delta) % 6;
+  // Green is max
+  else if (cmax === g)
+    h = (b - r) / delta + 2;
+  // Blue is max
+  else
+    h = (r - g) / delta + 4;
+
+  h = Math.round(h * 60);
+
+  // Make negative hues positive behind 360°
+  if (h < 0)
+    h += 360;
+  // Calculate lightness
+  l = (cmax + cmin) / 2;
+
+  // Calculate saturation
+  s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+
+  // Multiply l and s by 100
+  s = +(s * 100).toFixed(1);
+  l = +(l * 100).toFixed(1);
+
+  return 'hsl(' + h + ',' + s + '%,' + l + '%)';
+};
 
 const isApproximateColor = (color1: string, color2: string, threshold = 25): boolean => {
   if (!color1 || !color2) {
@@ -34,7 +88,7 @@ const isApproximateColor = (color1: string, color2: string, threshold = 25): boo
 };
 const detectColor = (imageData: ImageData, skip = 0): [PrimaryColor, Colors] => {
   const { data } = imageData;
-  const primary: PrimaryColor = { rgb: '', count: 0 };
+  const primary: PrimaryColor = { color: '', count: 0 };
   const colors: Colors = {};
 
   for (let px = 0, len = data.length; px < len; px += (skip + 1) * 4) {
@@ -42,11 +96,11 @@ const detectColor = (imageData: ImageData, skip = 0): [PrimaryColor, Colors] => 
       continue;
     }
     const tmpRgb = `${data[px]},${data[px + 1]},${data[px + 2]}`;
-    const rgb = primary.rgb && isApproximateColor(primary.rgb, tmpRgb) ? primary.rgb : tmpRgb;
+    const rgb = primary.color && isApproximateColor(primary.color, tmpRgb) ? primary.color : tmpRgb;
 
     colors[rgb] = (colors[rgb] || 0) + 1;
     if (colors[rgb] > primary.count) {
-      primary.rgb = rgb;
+      primary.color = rgb;
       primary.count = colors[rgb];
     }
   }
@@ -71,10 +125,25 @@ const sortColors = (colors: Colors, withOccurrences = false): (string[]) | Prima
   const sorted = Object.keys(colors).sort((a, b) => colors[b] - colors[a]);
   return withOccurrences
     ? sorted.map(color => ({
-      rgb: color,
+      color,
       count: colors[color],
     }))
     : sorted;
+};
+
+const getColorByFormat = (color: string, format: ColorFormat): string => {
+  switch (format) {
+    case 'rgb':
+      color = `rgb(${color})`;
+      break;
+    case 'hsl':
+      color = rgbToHsl(`rgb(${color})`);
+      break;
+    case 'hex':
+      color = rgbToHex(`rgb(${color})`);
+      break;
+  }
+  return color;
 };
 
 export function getDominantColor(element: HTMLImageElement, options: DominantColorOptions) {
@@ -95,7 +164,9 @@ export function getDominantColor(element: HTMLImageElement, options: DominantCol
     const imageData = getImageData(e.currentTarget as HTMLImageElement, options.downScaleFactor);
     const [primaryColor, colors] = detectColor(imageData, options.skipPixels);
     if (typeof options.callback === 'function') {
-      options.callback(primaryColor.rgb, sortColors(colors, options.paletteWithCountOfOccurrences).slice(0, options.colorsPaletteLength));
+      const colorsPalette = sortColors(colors, options.paletteWithCountOfOccurrences).slice(0, options.colorsPaletteLength);
+      const dominant = getColorByFormat(primaryColor.color, defaultOptions.colorFormat);
+      options.callback(dominant, colorsPalette);
     }
   };
 

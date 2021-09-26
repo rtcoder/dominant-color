@@ -49,8 +49,10 @@ function previewFile(file) {
     getDominantColor(img, {
       downScaleFactor: 10,
       skipPixels: 10,
+      colorFormat: 'hsl',
       callback: (color) => {
-        imgContainer.style.setProperty('--dominant-color', `rgb(${color})`);
+        console.log({ color });
+        imgContainer.style.setProperty('--dominant-color', color);
       },
     });
   };

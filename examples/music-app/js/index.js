@@ -480,7 +480,7 @@ fetch('./json/tracks.json')
       downScaleFactor: 1,
       skipPixels: 1,
       callback: (color) => {
-        imgNode.parentNode.parentNode.style.setProperty('--dominant-color-img', `rgb(${color})`);
+        imgNode.parentNode.parentNode.style.setProperty('--dominant-color-img', color);
         updateBackgroundColor();
         updateTitleAndAuthor();
         const minutes = Math.floor(maxSongTime() / 60);

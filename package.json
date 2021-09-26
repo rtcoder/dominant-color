@@ -1,9 +1,9 @@
 {
   "name": "dominant-color",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Get dominant color and palette of colors from an image",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/dominant-color.js",
+  "types": "dist/dominant-color.d.ts",
   "scripts": {
     "test": "jest --config jestconfig.json",
     "build": "tsc",
