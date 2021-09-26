@@ -18,4 +18,4 @@ export interface DominantColorOptions {
   callback: DominantColorCallback;
 }
 
-export type DominantColorCallback = (dominant: string, colorsPalette: (string[]) | (PrimaryColor[])) => void;
+export type DominantColorCallback = (dominant: string, colorsPalette: string[] | PrimaryColor[]) => void;

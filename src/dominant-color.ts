@@ -10,25 +10,20 @@ const rgbToHex = (rgb: string): string => {
   let g = (+_rgb[1]).toString(16);
   let b = (+_rgb[2]).toString(16);
 
-  if (r.length === 1)
-    r = '0' + r;
-  if (g.length === 1)
-    g = '0' + g;
-  if (b.length === 1)
-    b = '0' + b;
+  if (r.length === 1) r = '0' + r;
+  if (g.length === 1) g = '0' + g;
+  if (b.length === 1) b = '0' + b;
 
   return '#' + r + g + b;
 };
 
 const rgbToHsl = (rgb: string): string => {
   const sep = rgb.indexOf(',') > -1 ? ',' : ' ';
-  const _rgb: any[] = rgb.substr(4)
+  const _rgb: any[] = rgb
+    .substr(4)
     .split(')')[0]
     .split(sep)
-    .map(c => c.indexOf('%') > -1
-      ? Math.round((+c.substr(0, c.length - 1)) / 100 * 255)
-      : c,
-    );
+    .map((c) => (c.indexOf('%') > -1 ? Math.round((+c.substr(0, c.length - 1) / 100) * 255) : c));
 
   // Make r, g, and b fractions of 1
   const r = _rgb[0] / 255;
@@ -44,23 +39,18 @@ const rgbToHsl = (rgb: string): string => {
   let l = 0;
   // Calculate hue
   // No difference
-  if (delta === 0)
-    h = 0;
+  if (delta === 0) h = 0;
   // Red is max
-  else if (cmax === r)
-    h = ((g - b) / delta) % 6;
+  else if (cmax === r) h = ((g - b) / delta) % 6;
   // Green is max
-  else if (cmax === g)
-    h = (b - r) / delta + 2;
+  else if (cmax === g) h = (b - r) / delta + 2;
   // Blue is max
-  else
-    h = (r - g) / delta + 4;
+  else h = (r - g) / delta + 4;
 
   h = Math.round(h * 60);
 
   // Make negative hues positive behind 360°
-  if (h < 0)
-    h += 360;
+  if (h < 0) h += 360;
   // Calculate lightness
   l = (cmax + cmin) / 2;
 
@@ -121,13 +111,13 @@ const getImageData = (img: HTMLImageElement, downScaleFactor = 1): ImageData => 
   return context.getImageData(0, 0, img.width, img.height);
 };
 
-const sortColors = (colors: Colors, withOccurrences = false): (string[]) | PrimaryColor[] => {
+const sortColors = (colors: Colors, withOccurrences = false): string[] | PrimaryColor[] => {
   const sorted = Object.keys(colors).sort((a, b) => colors[b] - colors[a]);
   return withOccurrences
-    ? sorted.map(color => ({
-      color,
-      count: colors[color],
-    }))
+    ? sorted.map((color) => ({
+        color,
+        count: colors[color],
+      }))
     : sorted;
 };
 
