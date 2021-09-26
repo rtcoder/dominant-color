@@ -1,6 +1,6 @@
 {
   "name": "@rtcoder/dominant-color",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Get dominant color and palette of colors from an image",
   "main": "dist/dominant-color.js",
   "types": "dist/dominant-color.d.ts",
