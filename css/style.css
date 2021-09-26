@@ -16,6 +16,10 @@ a {
     position: relative;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     background: #fefefe;
     font-family: Lato, sans-serif;
@@ -96,6 +100,7 @@ h2 {
     padding: 30px 0 20px;
     text-align: center;
 }
-p{
+
+p {
     text-align: center;
 }

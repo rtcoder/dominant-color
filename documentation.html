@@ -1,29 +1,206 @@
 <!doctype html>
-<html lang="en">
+<html lang='en'>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Get dominant color</title>
-    <link rel="stylesheet" href="./css/style.css">
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+        content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Get dominant color</title>
+  <link rel='stylesheet' href='./css/style.css'>
+  <style>
+      @font-face {
+          font-family: Roboto Mono;
+          font-style: normal;
+          font-weight: 400;
+          src: url(https://stackedit.io/static/fonts/RobotoMono-Regular.0b6a547.woff) format("woff")
+      }
+
+      @font-face {
+          font-family: Roboto Mono;
+          font-style: normal;
+          font-weight: 600;
+          src: url(https://stackedit.io/static/fonts/RobotoMono-Bold.819f3b2.woff) format("woff")
+      }
+
+      pre, code {
+          font-family: monospace, monospace;
+          font-size: 1em
+      }
+
+      h1, h2 {
+          margin: 1.8em 0;
+          line-height: 1.33
+      }
+
+      h1:after, h2:after {
+          content: "";
+          display: block;
+          position: relative;
+          top: .33em;
+          border-bottom: 1px solid hsla(0, 0%, 50%,
+          .33)
+      }
+
+      code, pre {
+          font-family: Roboto Mono, Lucida Sans Typewriter, Lucida Console, monaco, Courrier, monospace;
+          font-size: .85em
+      }
+
+      code *, pre * {
+          font-size: inherit
+      }
+
+      code {
+          background-color: rgba(0, 0, 0,
+          .05);
+          border-radius: 3px;
+          padding: 2px 4px
+      }
+
+      pre > code {
+          background-color: rgba(0, 0, 0,
+          .05);
+          display: block;
+          padding: .5em;
+          -webkit-text-size-adjust: none;
+          overflow-x: auto;
+          white-space: pre
+      }
+
+      table {
+          background-color: transparent;
+          border-collapse: collapse;
+          border-spacing: 0
+      }
+
+      td, th {
+          border-right: 1px solid #dcdcdc;
+          padding: 8px 12px
+      }
+
+      td:last-child, th:last-child {
+          border-right: 0
+      }
+
+      td {
+          border-top: 1px solid #dcdcdc
+      }
+  </style>
 </head>
 <body>
 <header>
-    <ul>
-        <li><a href="/dominant-color/">Home</a></li>
-        <li class='active'><a href="/dominant-color/documentation.html">Documentation</a></li>
-        <li>
-            <a href="#">Examples</a>
-            <ul>
-                <li><a href="/dominant-color/examples/palette">Palette</a></li>
-                <li><a href="/dominant-color/examples/music-app">Music app</a></li>
-            </ul>
-        </li>
-        <li><a href='https://github.com/rtcoder/dominant-color/releases' target='_blank'>Download</a></li>
-    </ul>
+  <ul>
+    <li><a href='/dominant-color/'>Home</a></li>
+    <li class='active'><a href='/dominant-color/documentation.html'>Documentation</a></li>
+    <li>
+      <a href='#'>Examples</a>
+      <ul>
+        <li><a href='/dominant-color/examples/palette'>Palette</a></li>
+        <li><a href='/dominant-color/examples/music-app'>Music app</a></li>
+      </ul>
+    </li>
+    <li><a href='https://github.com/rtcoder/dominant-color/releases' target='_blank'>Download</a></li>
+  </ul>
 </header>
 
+<div class='container'>
+
+  <h1 id='dominant-color'>Dominant color</h1>
+  <p>Get dominant color from images using only JavaScript</p>
+  <h2 id='installation'>Installation</h2>
+  <pre><code>npm i @rtcoder/dominant-color
+</code></pre>
+  <h2 id='usage'>Usage</h2>
+  <pre><code>import {getDominantColor} from "@rtcoder/dominant-color";
+
+const img = document.querySelector('img');
+
+getDominantColor(img, {
+    downScaleFactor: 1,
+    skipPixels: 0,
+    colorsPaletteLength: 5,
+    paletteWithCountOfOccurrences: false,
+    colorFormat: 'rgb',
+    callback: (color, palette) =&gt; {
+       // your code here
+    }
+});
+</code></pre>
+  <h2 id='config-options'>Config options</h2>
+
+  <table>
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Default value</th>
+      <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td><code>downScaleFactor</code></td>
+      <td>number</td>
+      <td>1</td>
+      <td>factor of scale down of image, recommended to use for many large images</td>
+    </tr>
+    <tr>
+      <td><code>skipPixels</code></td>
+      <td>number</td>
+      <td>0</td>
+      <td>when larger than 0, skips every n pixels of while determine dominant color, recommended to use for large
+        images
+      </td>
+    </tr>
+    <tr>
+      <td><code>colorsPaletteLength</code></td>
+      <td>number</td>
+      <td>5</td>
+      <td>length of returned palette of colors</td>
+    </tr>
+    <tr>
+      <td><code>paletteWithCountOfOccurrences</code></td>
+      <td>boolean</td>
+      <td>false</td>
+      <td>determines whether to return colors with the number of occurrences</td>
+    </tr>
+    <tr>
+      <td><code>colorFormat</code></td>
+      <td>string</td>
+      <td>‘rgb’</td>
+      <td>defines the format of the returned colors, available values are ‘rgb’, ‘hsl’ and ‘hex’</td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>function</td>
+      <td>[empty function]</td>
+      <td>callback function</td>
+    </tr>
+    </tbody>
+  </table>
+  <h2 id='interfaces'>Interfaces</h2>
+  <pre><code>type ColorFormat = 'rgb' | 'hsl' | 'hex';
+
+interface PrimaryColor {
+  color: string;
+  count: number;
+}
+
+interface DominantColorOptions {
+  downScaleFactor: number;
+  skipPixels: number;
+  colorsPaletteLength: number;
+  paletteWithCountOfOccurrences: boolean;
+  colorFormat: ColorFormat;
+  callback: DominantColorCallback;
+}
+
+type DominantColorCallback = (dominant: string, colorsPalette: (string[]) | (PrimaryColor[])) =&gt; void;
+
+function getDominantColor(element: HTMLImageElement, options: Partial&lt;DominantColorOptions&gt;): void
+</code></pre>
+
+</div>
 
 </body>
 </html>

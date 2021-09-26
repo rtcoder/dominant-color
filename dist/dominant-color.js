@@ -16,12 +16,11 @@ const rgbToHex = (rgb) => {
 };
 const rgbToHsl = (rgb) => {
     const sep = rgb.indexOf(',') > -1 ? ',' : ' ';
-    const _rgb = rgb.substr(4)
+    const _rgb = rgb
+        .substr(4)
         .split(')')[0]
         .split(sep)
-        .map(c => c.indexOf('%') > -1
-        ? Math.round((+c.substr(0, c.length - 1)) / 100 * 255)
-        : c);
+        .map((c) => (c.indexOf('%') > -1 ? Math.round((+c.substr(0, c.length - 1) / 100) * 255) : c));
     // Make r, g, and b fractions of 1
     const r = _rgb[0] / 255;
     const g = _rgb[1] / 255;
@@ -106,7 +105,7 @@ const getImageData = (img, downScaleFactor = 1) => {
 const sortColors = (colors, withOccurrences = false) => {
     const sorted = Object.keys(colors).sort((a, b) => colors[b] - colors[a]);
     return withOccurrences
-        ? sorted.map(color => ({
+        ? sorted.map((color) => ({
             color,
             count: colors[color],
         }))
