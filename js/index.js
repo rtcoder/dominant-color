@@ -5,6 +5,7 @@ const dropArea = document.getElementById('drop-area');
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
   dropArea.addEventListener(eventName, preventDefaults, false);
 });
+dropArea.querySelector('input').addEventListener('change', handleInputChange);
 
 function preventDefaults(e) {
   e.preventDefault();
@@ -28,6 +29,10 @@ function unhighlight(e) {
 }
 
 dropArea.addEventListener('drop', handleDrop, false);
+
+function handleInputChange(e) {
+  handleFiles(e.target.files);
+}
 
 function handleDrop(e) {
   let dt = e.dataTransfer;
