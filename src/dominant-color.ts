@@ -1,12 +1,12 @@
 import { ColorFormat, Colors, DominantColorOptions, PrimaryColor } from './interface';
 
 function rgbToHex(rgb: string): string {
-  const [_r, _g, _b] = rgb.match(/\d+/g)!.map((val) => (+val).toString(16).padStart(2, '0'));
+  const [_r, _g, _b] = getRgbValues(rgb).map((val) => val.toString(16).padStart(2, '0'));
   return `#${_r}${_g}${_b}`;
 }
 
 function rgbToHsl(rgb: string): string {
-  const [_r, _g, _b] = rgb.match(/\d+/g)!.map(Number);
+  const [_r, _g, _b] = getRgbValues(rgb);
   const r = _r / 255;
   const g = _g / 255;
   const b = _b / 255;
@@ -36,11 +36,12 @@ function rgbToHsl(rgb: string): string {
   return `hsl(${h},${(s * 100).toFixed(1)}%,${(l * 100).toFixed(1)}%)`;
 }
 
-function isApproximateColor(color1: string, color2: string, threshold = 25): boolean {
-  const [r1, g1, b1] = color1.split(',').map(Number);
-  const [r2, g2, b2] = color2.split(',').map(Number);
-  const distanceSquared = (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
-  return distanceSquared < threshold ** 2;
+function getRgbValues(rgb: string): number[] {
+  const values = rgb.match(/\d+/g);
+  if (!values || values.length < 3) {
+    throw new Error(`Invalid RGB color: ${rgb}`);
+  }
+  return values.slice(0, 3).map(Number);
 }
 
 function detectColor(imageData: ImageData, skip = 0): [PrimaryColor, Colors] {
@@ -64,13 +65,14 @@ function detectColor(imageData: ImageData, skip = 0): [PrimaryColor, Colors] {
 }
 
 function getImageData(img: HTMLImageElement, downScaleFactor = 1): ImageData {
-  if (downScaleFactor < 1) {
-    throw new Error('downScaleFactor must be equal to 1 or greater');
-  }
   const canvas = document.createElement('canvas') as HTMLCanvasElement;
-  const context = canvas.getContext('2d')!;
-  const scaledWidth = Math.floor(img.width / downScaleFactor);
-  const scaledHeight = Math.floor(img.height / downScaleFactor);
+  const context = canvas.getContext('2d');
+  const scaledWidth = Math.max(1, Math.floor(img.width / downScaleFactor));
+  const scaledHeight = Math.max(1, Math.floor(img.height / downScaleFactor));
+
+  if (!context) {
+    throw new Error('Canvas 2D context is not available');
+  }
 
   canvas.width = scaledWidth;
   canvas.height = scaledHeight;
@@ -88,6 +90,16 @@ function sortColors(colors: Colors, withOccurrences = false): string[] | Primary
     : sorted;
 }
 
+function formatPalette(colorsPalette: string[] | PrimaryColor[], format: ColorFormat): string[] | PrimaryColor[] {
+  if (!colorsPalette.length || typeof colorsPalette[0] === 'string') {
+    return (colorsPalette as string[]).map((color) => getColorByFormat(color, format));
+  }
+  return (colorsPalette as PrimaryColor[]).map((item) => ({
+    ...item,
+    color: getColorByFormat(item.color, format),
+  }));
+}
+
 function getColorByFormat(color: string, format: ColorFormat): string {
   switch (format) {
     case 'rgb':
@@ -102,7 +114,20 @@ function getColorByFormat(color: string, format: ColorFormat): string {
   }
   return color;
 }
-export function getDominantColor(element: HTMLImageElement, options: Partial<DominantColorOptions>): void {
+
+function validateOptions(config: DominantColorOptions): void {
+  if (!Number.isFinite(config.downScaleFactor) || config.downScaleFactor < 1) {
+    throw new Error('downScaleFactor must be equal to 1 or greater');
+  }
+  if (!Number.isInteger(config.skipPixels) || config.skipPixels < 0) {
+    throw new Error('skipPixels must be a non-negative integer');
+  }
+  if (!Number.isInteger(config.colorsPaletteLength) || config.colorsPaletteLength < 0) {
+    throw new Error('colorsPaletteLength must be a non-negative integer');
+  }
+}
+
+export function getDominantColor(element: HTMLImageElement, options: Partial<DominantColorOptions> = {}): void {
   const defaultOptions: DominantColorOptions = {
     downScaleFactor: 1,
     skipPixels: 0,
@@ -112,20 +137,43 @@ export function getDominantColor(element: HTMLImageElement, options: Partial<Dom
     callback: () => {
       // callback
     },
+    errorCallback: () => {
+      // error callback
+    },
   };
   const config: DominantColorOptions = { ...defaultOptions, ...options };
+  validateOptions(config);
+
+  const source = element.currentSrc || element.src;
+  if (!source) {
+    config.errorCallback(new Error('Image source is empty'));
+    return;
+  }
 
   const img = new Image();
   img.crossOrigin = 'Anonymous';
   img.onload = () => {
-    const imageData = getImageData(img, config.downScaleFactor);
-    const [primaryColor, colors] = detectColor(imageData, config.skipPixels);
-    const colorsPalette = config.colorsPaletteLength
-      ? sortColors(colors, config.paletteWithCountOfOccurrences).slice(0, config.colorsPaletteLength)
-      : [];
-    const dominant = getColorByFormat(primaryColor.color, config.colorFormat);
-    config.callback!(dominant, colorsPalette);
+    try {
+      const imageData = getImageData(img, config.downScaleFactor);
+      const [primaryColor, colors] = detectColor(imageData, config.skipPixels);
+      const colorsPalette = config.colorsPaletteLength
+        ? sortColors(colors, config.paletteWithCountOfOccurrences).slice(0, config.colorsPaletteLength)
+        : [];
+
+      if (!primaryColor.color) {
+        config.callback('', []);
+        return;
+      }
+
+      const dominant = getColorByFormat(primaryColor.color, config.colorFormat);
+      config.callback(dominant, formatPalette(colorsPalette, config.colorFormat));
+    } catch (error) {
+      config.errorCallback(error instanceof Error ? error : new Error(String(error)));
+    }
+  };
+  img.onerror = () => {
+    config.errorCallback(new Error(`Unable to load image: ${source}`));
   };
 
-  img.src = element.src;
+  img.src = source;
 }

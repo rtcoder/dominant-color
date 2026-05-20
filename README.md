@@ -35,6 +35,9 @@ getDominantColor(img, {
     colorFormat: 'rgb',
     callback: (color, palette) => {
         // Your code here
+    },
+    errorCallback: (error) => {
+        // Handle image loading or canvas errors here
     }
 });
 ```
@@ -49,8 +52,9 @@ The `getDominantColor` function accepts the following configuration options:
 | `skipPixels`                | number   | 0             | Skips every `n` pixels while determining the dominant color. Recommended for large images. |
 | `colorsPaletteLength`       | number   | 5             | Length of the returned color palette.                        |
 | `paletteWithCountOfOccurrences` | boolean  | false         | Determines whether to return colors with the number of occurrences. |
-| `colorFormat`               | string   | `'rgb'`       | Defines the format of the returned colors. Available values are `'rgb'`, `'hsl'`, and `'hex'`. |
+| `colorFormat`               | string   | `'rgb'`       | Defines the format of the returned dominant color and palette colors. Available values are `'rgb'`, `'hsl'`, and `'hex'`. |
 | `callback`                  | function | [empty function] | Callback function that receives the dominant color and the colors palette. |
+| `errorCallback`             | function | [empty function] | Callback function that receives image loading, canvas, and processing errors. |
 
 ## Interfaces
 
@@ -71,9 +75,11 @@ interface DominantColorOptions {
   paletteWithCountOfOccurrences: boolean;
   colorFormat: ColorFormat;
   callback: DominantColorCallback;
+  errorCallback: DominantColorErrorCallback;
 }
 
 type DominantColorCallback = (dominant: string, colorsPalette: string[] | PrimaryColor[]) => void;
+type DominantColorErrorCallback = (error: Error) => void;
 
 function getDominantColor(element: HTMLImageElement, options: Partial<DominantColorOptions>): void;
 ```

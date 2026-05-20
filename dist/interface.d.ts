@@ -13,5 +13,7 @@ export interface DominantColorOptions {
     paletteWithCountOfOccurrences: boolean;
     colorFormat: ColorFormat;
     callback: DominantColorCallback;
+    errorCallback: DominantColorErrorCallback;
 }
 export declare type DominantColorCallback = (dominant: string, colorsPalette: string[] | PrimaryColor[]) => void;
+export declare type DominantColorErrorCallback = (error: Error) => void;
