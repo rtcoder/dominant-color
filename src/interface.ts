@@ -13,6 +13,7 @@ export interface DominantColorOptions {
   downScaleFactor: number;
   skipPixels: number;
   colorsPaletteLength: number;
+  colorGroupingThreshold: number;
   paletteWithCountOfOccurrences: boolean;
   colorFormat: ColorFormat;
   callback: DominantColorCallback;

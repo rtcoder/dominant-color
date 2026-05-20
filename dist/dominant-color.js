@@ -37,7 +37,38 @@ function getRgbValues(rgb) {
     }
     return values.slice(0, 3).map(Number);
 }
-function detectColor(imageData, skip = 0) {
+function toRgbKey(r, g, b) {
+    return `${Math.round(r)},${Math.round(g)},${Math.round(b)}`;
+}
+function getColorDistanceSquared(r1, g1, b1, r2, g2, b2) {
+    return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
+}
+function groupColors(colors, threshold) {
+    if (threshold === 0) {
+        return colors;
+    }
+    const groups = [];
+    const thresholdSquared = threshold ** 2;
+    Object.keys(colors).forEach((color) => {
+        const [r, g, b] = getRgbValues(color);
+        const group = groups.find((item) => getColorDistanceSquared(item.r, item.g, item.b, r, g, b) <= thresholdSquared);
+        if (!group) {
+            groups.push({ r, g, b, count: colors[color] });
+            return;
+        }
+        const totalCount = group.count + colors[color];
+        group.r = (group.r * group.count + r * colors[color]) / totalCount;
+        group.g = (group.g * group.count + g * colors[color]) / totalCount;
+        group.b = (group.b * group.count + b * colors[color]) / totalCount;
+        group.count = totalCount;
+    });
+    return groups.reduce((groupedColors, group) => {
+        const color = toRgbKey(group.r, group.g, group.b);
+        groupedColors[color] = (groupedColors[color] || 0) + group.count;
+        return groupedColors;
+    }, {});
+}
+function detectColor(imageData, skip = 0, colorGroupingThreshold = 0) {
     const { data } = imageData;
     const colors = {};
     let primaryColor = '';
@@ -53,7 +84,16 @@ function detectColor(imageData, skip = 0) {
             maxCount = colors[rgb];
         }
     }
-    return [{ color: primaryColor, count: maxCount }, colors];
+    const groupedColors = groupColors(colors, colorGroupingThreshold);
+    primaryColor = '';
+    maxCount = 0;
+    Object.keys(groupedColors).forEach((color) => {
+        if (groupedColors[color] > maxCount) {
+            primaryColor = color;
+            maxCount = groupedColors[color];
+        }
+    });
+    return [{ color: primaryColor, count: maxCount }, groupedColors];
 }
 function getImageData(img, downScaleFactor = 1) {
     const canvas = document.createElement('canvas');
@@ -107,12 +147,16 @@ function validateOptions(config) {
     if (!Number.isInteger(config.colorsPaletteLength) || config.colorsPaletteLength < 0) {
         throw new Error('colorsPaletteLength must be a non-negative integer');
     }
+    if (!Number.isFinite(config.colorGroupingThreshold) || config.colorGroupingThreshold < 0) {
+        throw new Error('colorGroupingThreshold must be a non-negative number');
+    }
 }
 export function getDominantColor(element, options = {}) {
     const defaultOptions = {
         downScaleFactor: 1,
         skipPixels: 0,
         colorsPaletteLength: 5,
+        colorGroupingThreshold: 0,
         paletteWithCountOfOccurrences: false,
         colorFormat: 'rgb',
         callback: () => {
@@ -134,7 +178,7 @@ export function getDominantColor(element, options = {}) {
     img.onload = () => {
         try {
             const imageData = getImageData(img, config.downScaleFactor);
-            const [primaryColor, colors] = detectColor(imageData, config.skipPixels);
+            const [primaryColor, colors] = detectColor(imageData, config.skipPixels, config.colorGroupingThreshold);
             const colorsPalette = config.colorsPaletteLength
                 ? sortColors(colors, config.paletteWithCountOfOccurrences).slice(0, config.colorsPaletteLength)
                 : [];

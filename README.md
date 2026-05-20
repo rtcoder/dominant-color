@@ -31,6 +31,7 @@ getDominantColor(img, {
     downScaleFactor: 1,
     skipPixels: 0,
     colorsPaletteLength: 5,
+    colorGroupingThreshold: 0,
     paletteWithCountOfOccurrences: false,
     colorFormat: 'rgb',
     callback: (color, palette) => {
@@ -51,6 +52,7 @@ The `getDominantColor` function accepts the following configuration options:
 | `downScaleFactor`           | number   | 1             | Factor of scale down for the image. Recommended for large images. |
 | `skipPixels`                | number   | 0             | Skips every `n` pixels while determining the dominant color. Recommended for large images. |
 | `colorsPaletteLength`       | number   | 5             | Length of the returned color palette.                        |
+| `colorGroupingThreshold`    | number   | 0             | Groups similar RGB colors before sorting. Use `0` for exact pixel matching, or a larger value such as `10`-`30` for photos. |
 | `paletteWithCountOfOccurrences` | boolean  | false         | Determines whether to return colors with the number of occurrences. |
 | `colorFormat`               | string   | `'rgb'`       | Defines the format of the returned dominant color and palette colors. Available values are `'rgb'`, `'hsl'`, and `'hex'`. |
 | `callback`                  | function | [empty function] | Callback function that receives the dominant color and the colors palette. |
@@ -72,6 +74,7 @@ interface DominantColorOptions {
   downScaleFactor: number;
   skipPixels: number;
   colorsPaletteLength: number;
+  colorGroupingThreshold: number;
   paletteWithCountOfOccurrences: boolean;
   colorFormat: ColorFormat;
   callback: DominantColorCallback;
