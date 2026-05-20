@@ -1,43 +1,117 @@
 <!doctype html>
-<html lang='en'>
+<html lang="en">
 <head>
-  <meta charset='UTF-8'>
-  <meta name='viewport'
-        content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
-  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-  <title>Get dominant color</title>
-  <link rel='stylesheet' href='css/index.css'>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dominant Color - JavaScript image color extraction</title>
+  <meta name="description" content="Extract dominant colors and palettes from images with a small JavaScript library.">
+  <link rel="stylesheet" href="css/index.css?v=2">
 </head>
 <body>
-<header>
-  <ul>
-    <li class='active'><a href='/dominant-color/'>Home</a></li>
-    <li><a href='/dominant-color/documentation.html'>Documentation</a></li>
-    <li>
-      <a href='#'>Examples</a>
-      <ul>
-        <li><a href='/dominant-color/examples/palette'>Palette</a></li>
-        <li><a href='/dominant-color/examples/music-app'>Music app</a></li>
-      </ul>
-    </li>
-    <li><a href='https://github.com/rtcoder/dominant-color/releases' target='_blank'>Download</a></li>
-  </ul>
+<header class="site-header">
+  <nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="/dominant-color/">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>Dominant Color</span>
+    </a>
+    <ul class="nav-links">
+      <li class="active"><a href="/dominant-color/">Home</a></li>
+      <li><a href="/dominant-color/documentation.html">Documentation</a></li>
+      <li>
+        <a href="/dominant-color/examples/palette/">Examples</a>
+        <ul>
+          <li><a href="/dominant-color/examples/palette/">Palette</a></li>
+          <li><a href="/dominant-color/examples/music-app/">Music app</a></li>
+        </ul>
+      </li>
+      <li><a href="https://github.com/rtcoder/dominant-color/releases" target="_blank" rel="noreferrer">Download</a></li>
+    </ul>
+  </nav>
 </header>
 
-<div class='container'>
+<main>
+  <section class="container hero">
+    <div class="hero-content">
+      <p class="eyebrow">Tiny image intelligence for the browser</p>
+      <h1>Extract colors from real images.</h1>
+      <p class="lead">
+        Get a dominant color and palette from images, canvases, blobs, URLs, or image elements with callback and Promise APIs.
+      </p>
+      <div class="actions">
+        <a class="button" href="#try-it">Try it now</a>
+        <a class="button button-secondary" href="/dominant-color/documentation.html">Read the docs</a>
+      </div>
+    </div>
+    <div class="hero-visual" aria-label="Sample photo with generated palette">
+      <img src="examples/palette/img/sample7.jpg" alt="Sample landscape used to demonstrate palette extraction">
+      <div class="color-strip" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </section>
 
-  <h2>Get dominant color of image</h2>
-  <p>Upload image below and check the dominant color of image</p>
+  <section class="section-tight">
+    <div class="container grid grid-3">
+      <article class="panel feature">
+        <h3>Modern input support</h3>
+        <p>Use image elements, canvas, ImageBitmap, URL strings, Blob, or File objects.</p>
+      </article>
+      <article class="panel feature">
+        <h3>Callback or Promise</h3>
+        <p>Keep existing callback code or use the async API in modern application flows.</p>
+      </article>
+      <article class="panel feature">
+        <h3>Photo-ready palettes</h3>
+        <p>Choose exact RGB counting, fast buckets, or median-cut quantization for balanced palettes.</p>
+      </article>
+    </div>
+  </section>
 
-  <label id='drop-area'>
-    Drop images here or select from your device
-    <input type='file' multiple accept='image/*'>
-  </label>
-  <div id='gallery'></div>
+  <section id="try-it" class="section uploader-section">
+    <div class="container">
+      <div class="page-title">
+        <p class="eyebrow">Interactive demo</p>
+        <h1>Drop an image and inspect its color.</h1>
+        <p class="lead">The uploader runs locally in your browser and shows the detected dominant color for each image.</p>
+      </div>
 
-</div>
+      <label id="drop-area">
+        Drop images here or select from your device
+        <input type="file" multiple accept="image/*">
+      </label>
+      <div id="gallery"></div>
+    </div>
+  </section>
 
-<script type='module' src='js/index.js'></script>
+  <section class="section-tight">
+    <div class="container grid grid-2">
+      <a class="panel demo-card" href="/dominant-color/examples/palette/">
+        <img src="examples/palette/img/sample8.png" alt="Palette example preview">
+        <span class="demo-card-content">
+          <h3>Palette example</h3>
+          <p>See extracted palettes rendered beside multiple images.</p>
+        </span>
+      </a>
+      <a class="panel demo-card" href="/dominant-color/examples/music-app/">
+        <img src="examples/music-app/img/NATSUMI - Take Me Away [NCS Release].jpg" alt="Music app color example preview">
+        <span class="demo-card-content">
+          <h3>Music app example</h3>
+          <p>Watch album art drive an adaptive app interface.</p>
+        </span>
+      </a>
+    </div>
+  </section>
+</main>
 
+<footer class="site-footer">
+  <div class="container">Built for browser image workflows with TypeScript declarations, ESM, and CJS builds.</div>
+</footer>
+
+<script type="module" src="js/index.js"></script>
 </body>
 </html>

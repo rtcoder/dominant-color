@@ -1,206 +1,216 @@
 <!doctype html>
-<html lang='en'>
+<html lang="en">
 <head>
-  <meta charset='UTF-8'>
-  <meta name='viewport'
-        content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
-  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-  <title>Get dominant color</title>
-  <link rel='stylesheet' href='./css/style.css'>
-  <style>
-      @font-face {
-          font-family: Roboto Mono;
-          font-style: normal;
-          font-weight: 400;
-          src: url(https://stackedit.io/static/fonts/RobotoMono-Regular.0b6a547.woff) format("woff")
-      }
-
-      @font-face {
-          font-family: Roboto Mono;
-          font-style: normal;
-          font-weight: 600;
-          src: url(https://stackedit.io/static/fonts/RobotoMono-Bold.819f3b2.woff) format("woff")
-      }
-
-      pre, code {
-          font-family: monospace, monospace;
-          font-size: 1em
-      }
-
-      h1, h2 {
-          margin: 1.8em 0;
-          line-height: 1.33
-      }
-
-      h1:after, h2:after {
-          content: "";
-          display: block;
-          position: relative;
-          top: .33em;
-          border-bottom: 1px solid hsla(0, 0%, 50%,
-          .33)
-      }
-
-      code, pre {
-          font-family: Roboto Mono, Lucida Sans Typewriter, Lucida Console, monaco, Courrier, monospace;
-          font-size: .85em
-      }
-
-      code *, pre * {
-          font-size: inherit
-      }
-
-      code {
-          background-color: rgba(0, 0, 0,
-          .05);
-          border-radius: 3px;
-          padding: 2px 4px
-      }
-
-      pre > code {
-          background-color: rgba(0, 0, 0,
-          .05);
-          display: block;
-          padding: .5em;
-          -webkit-text-size-adjust: none;
-          overflow-x: auto;
-          white-space: pre
-      }
-
-      table {
-          background-color: transparent;
-          border-collapse: collapse;
-          border-spacing: 0
-      }
-
-      td, th {
-          border-right: 1px solid #dcdcdc;
-          padding: 8px 12px
-      }
-
-      td:last-child, th:last-child {
-          border-right: 0
-      }
-
-      td {
-          border-top: 1px solid #dcdcdc
-      }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dominant Color - Documentation</title>
+  <meta name="description" content="API documentation for @rtcoder/dominant-color.">
+  <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-<header>
-  <ul>
-    <li><a href='/dominant-color/'>Home</a></li>
-    <li class='active'><a href='/dominant-color/documentation.html'>Documentation</a></li>
-    <li>
-      <a href='#'>Examples</a>
-      <ul>
-        <li><a href='/dominant-color/examples/palette'>Palette</a></li>
-        <li><a href='/dominant-color/examples/music-app'>Music app</a></li>
-      </ul>
-    </li>
-    <li><a href='https://github.com/rtcoder/dominant-color/releases' target='_blank'>Download</a></li>
-  </ul>
+<header class="site-header">
+  <nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="/dominant-color/">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>Dominant Color</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dominant-color/">Home</a></li>
+      <li class="active"><a href="/dominant-color/documentation.html">Documentation</a></li>
+      <li>
+        <a href="/dominant-color/examples/palette/">Examples</a>
+        <ul>
+          <li><a href="/dominant-color/examples/palette/">Palette</a></li>
+          <li><a href="/dominant-color/examples/music-app/">Music app</a></li>
+        </ul>
+      </li>
+      <li><a href="https://github.com/rtcoder/dominant-color/releases" target="_blank" rel="noreferrer">Download</a></li>
+    </ul>
+  </nav>
 </header>
 
-<div class='container'>
+<main class="container">
+  <section class="page-title">
+    <p class="eyebrow">Documentation</p>
+    <h1>Use color extraction where images already live.</h1>
+    <p class="lead">
+      The library accepts DOM image sources, canvas output, object URLs, blobs, and files. It ships ESM and CJS builds with TypeScript declarations.
+    </p>
+  </section>
 
-  <h1 id='dominant-color'>Dominant color</h1>
-  <p>Get dominant color from images using only JavaScript</p>
-  <h2 id='installation'>Installation</h2>
-  <pre><code>npm i @rtcoder/dominant-color
-</code></pre>
-  <h2 id='usage'>Usage</h2>
-  <pre><code>import {getDominantColor} from "@rtcoder/dominant-color";
+  <div class="doc-layout">
+    <aside class="toc" aria-label="Documentation sections">
+      <a href="#installation">Installation</a>
+      <a href="#imports">Imports</a>
+      <a href="#usage">Usage</a>
+      <a href="#sources">Image sources</a>
+      <a href="#options">Options</a>
+      <a href="#types">Types</a>
+    </aside>
 
-const img = document.querySelector('img');
+    <article class="docs-content">
+      <section id="installation">
+        <h2>Installation</h2>
+        <pre><code>npm i @rtcoder/dominant-color</code></pre>
+      </section>
 
-getDominantColor(img, {
-    downScaleFactor: 1,
-    skipPixels: 0,
-    colorsPaletteLength: 5,
-    paletteWithCountOfOccurrences: false,
-    colorFormat: 'rgb',
-    callback: (color, palette) =&gt; {
-       // your code here
-    }
+      <section id="imports">
+        <h2>Imports</h2>
+        <p>Use ESM in modern apps:</p>
+        <pre><code>import { getDominantColor, getDominantColorAsync } from '@rtcoder/dominant-color';</code></pre>
+        <p>CommonJS consumers can use <code>require</code>:</p>
+        <pre><code>const { getDominantColor } = require('@rtcoder/dominant-color');</code></pre>
+      </section>
+
+      <section id="usage">
+        <h2>Usage</h2>
+        <p>Promise-based API:</p>
+        <pre><code>const img = document.querySelector('img');
+
+const result = await getDominantColorAsync(img, {
+  colorFormat: 'hex',
+  colorQuantization: 'median-cut',
+  colorsPaletteLength: 6,
 });
-</code></pre>
-  <h2 id='config-options'>Config options</h2>
 
-  <table>
-    <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Default value</th>
-      <th>Description</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-      <td><code>downScaleFactor</code></td>
-      <td>number</td>
-      <td>1</td>
-      <td>factor of scale down of image, recommended to use for many large images</td>
-    </tr>
-    <tr>
-      <td><code>skipPixels</code></td>
-      <td>number</td>
-      <td>0</td>
-      <td>when larger than 0, skips every n pixels of while determine dominant color, recommended to use for large
-        images
-      </td>
-    </tr>
-    <tr>
-      <td><code>colorsPaletteLength</code></td>
-      <td>number</td>
-      <td>5</td>
-      <td>length of returned palette of colors</td>
-    </tr>
-    <tr>
-      <td><code>paletteWithCountOfOccurrences</code></td>
-      <td>boolean</td>
-      <td>false</td>
-      <td>determines whether to return colors with the number of occurrences</td>
-    </tr>
-    <tr>
-      <td><code>colorFormat</code></td>
-      <td>string</td>
-      <td>‘rgb’</td>
-      <td>defines the format of the returned colors, available values are ‘rgb’, ‘hsl’ and ‘hex’</td>
-    </tr>
-    <tr>
-      <td><code>callback</code></td>
-      <td>function</td>
-      <td>[empty function]</td>
-      <td>callback function</td>
-    </tr>
-    </tbody>
-  </table>
-  <h2 id='interfaces'>Interfaces</h2>
-  <pre><code>type ColorFormat = 'rgb' | 'hsl' | 'hex';
+console.log(result.dominant, result.colorsPalette);</code></pre>
+        <p>Callback API:</p>
+        <pre><code>getDominantColor(img, {
+  colorFormat: 'rgb',
+  callback: (dominant, colorsPalette) =&gt; {
+    console.log(dominant, colorsPalette);
+  },
+  errorCallback: (error) =&gt; {
+    console.error(error);
+  },
+});</code></pre>
+      </section>
+
+      <section id="sources">
+        <h2>Image sources</h2>
+        <div class="grid grid-2">
+          <div class="panel feature">
+            <h3>DOM and canvas</h3>
+            <p><code>HTMLImageElement</code>, <code>HTMLCanvasElement</code>, and <code>ImageBitmap</code> can be passed directly.</p>
+          </div>
+          <div class="panel feature">
+            <h3>Files and URLs</h3>
+            <p>Use URL strings, <code>Blob</code>, or <code>File</code>. Blob object URLs are created and revoked internally.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="options">
+        <h2>Options</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td><code>downScaleFactor</code></td>
+              <td>number</td>
+              <td>1</td>
+              <td>Scales the source down before sampling. Useful for large images.</td>
+            </tr>
+            <tr>
+              <td><code>skipPixels</code></td>
+              <td>number</td>
+              <td>0</td>
+              <td>Skips every n pixels while reading image data.</td>
+            </tr>
+            <tr>
+              <td><code>colorsPaletteLength</code></td>
+              <td>number</td>
+              <td>5</td>
+              <td>Maximum number of colors returned in the palette.</td>
+            </tr>
+            <tr>
+              <td><code>colorQuantization</code></td>
+              <td><code>'exact' | 'bucket' | 'median-cut'</code></td>
+              <td><code>'exact'</code></td>
+              <td>Controls palette extraction. <code>median-cut</code> is best for balanced photo palettes.</td>
+            </tr>
+            <tr>
+              <td><code>colorBucketSize</code></td>
+              <td>number</td>
+              <td>24</td>
+              <td>Bucket size used by <code>colorQuantization: 'bucket'</code>.</td>
+            </tr>
+            <tr>
+              <td><code>colorGroupingThreshold</code></td>
+              <td>number</td>
+              <td>0</td>
+              <td>Groups nearby RGB values after counting or quantization.</td>
+            </tr>
+            <tr>
+              <td><code>paletteWithCountOfOccurrences</code></td>
+              <td>boolean</td>
+              <td>false</td>
+              <td>Returns palette entries as <code>{ color, count }</code>.</td>
+            </tr>
+            <tr>
+              <td><code>colorFormat</code></td>
+              <td><code>'rgb' | 'hsl' | 'hex'</code></td>
+              <td><code>'rgb'</code></td>
+              <td>Formats the dominant color and palette colors.</td>
+            </tr>
+            <tr>
+              <td><code>callback</code></td>
+              <td>function</td>
+              <td>empty function</td>
+              <td>Receives <code>dominant</code> and <code>colorsPalette</code>.</td>
+            </tr>
+            <tr>
+              <td><code>errorCallback</code></td>
+              <td>function</td>
+              <td>empty function</td>
+              <td>Receives image loading, canvas, and processing errors.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="types">
+        <h2>Types</h2>
+        <pre><code>type ColorFormat = 'rgb' | 'hsl' | 'hex';
+type ColorQuantization = 'exact' | 'bucket' | 'median-cut';
+type DominantColorSource = HTMLImageElement | HTMLCanvasElement | ImageBitmap | string | Blob;
 
 interface PrimaryColor {
   color: string;
   count: number;
 }
 
-interface DominantColorOptions {
-  downScaleFactor: number;
-  skipPixels: number;
-  colorsPaletteLength: number;
-  paletteWithCountOfOccurrences: boolean;
-  colorFormat: ColorFormat;
-  callback: DominantColorCallback;
+interface DominantColorResult {
+  dominant: string;
+  colorsPalette: string[] | PrimaryColor[];
 }
 
-type DominantColorCallback = (dominant: string, colorsPalette: (string[]) | (PrimaryColor[])) =&gt; void;
+function getDominantColor(
+  source: DominantColorSource,
+  options?: Partial&lt;DominantColorOptions&gt;
+): void;
 
-function getDominantColor(element: HTMLImageElement, options: Partial&lt;DominantColorOptions&gt;): void
-</code></pre>
+function getDominantColorAsync(
+  source: DominantColorSource,
+  options?: Partial&lt;DominantColorOptions&gt;
+): Promise&lt;DominantColorResult&gt;;</code></pre>
+      </section>
+    </article>
+  </div>
+</main>
 
-</div>
-
+<footer class="site-footer">
+  <div class="container">Documentation for @rtcoder/dominant-color.</div>
+</footer>
 </body>
 </html>

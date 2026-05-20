@@ -66,7 +66,7 @@ function callbackAfterGetColor(imgNode) {
 
     imgNode.parentNode.parentNode.parentNode.querySelector('.palette').innerHTML = colors.map(c => {
       const v = lightOrDark(c) === 'light' ? 0 : 255;
-      const dotStyle = `background-color:rgb(${c}); border: 1px solid rgba(${v},${v},${v},0.45)`;
+      const dotStyle = `background-color:${c}; border: 1px solid rgba(${v},${v},${v},0.45)`;
       return `<div style='${dotStyle}'></div>`;
     }).join('');
   };
