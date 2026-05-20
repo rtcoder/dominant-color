@@ -1,68 +1,58 @@
 @import '../../../css/style.css';
 
 .palette-example {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    padding-bottom: 4rem;
 }
 
 .palette-example .image-palette {
-    --dominant-color: '';
-    width: 350px;
-    display: flex;
-    flex-direction: row;
-    margin: 5px;
-    padding: 5px;
-    border: 1px solid var(--dominant-color);
-    border-radius: 10px;
+    --dominant-color: transparent;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 14px 32px rgba(23, 32, 38, 0.1);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 58px;
     overflow: hidden;
-    transition: background-color 0.2s ease-in-out;
-}
-
-
-.palette-example .image-palette:hover {
-    background-color: var(--dominant-color);
-}
-
-.palette-example .image-palette:hover .image {
-    overflow: visible;
 }
 
 .palette-example .image {
-    width: 300px;
-    height: 300px;
-    display: flex;
-    overflow: hidden;
-    border-radius: 10px;
-    padding: 10px;
     background-color: var(--dominant-color);
+    min-height: 300px;
+    padding: 0.75rem;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .palette-example .img-container {
-    display: flex;
-    overflow: hidden;
-    border-radius: 300px;
-    width: 100%;
+    border-radius: 8px;
     height: 100%;
+    overflow: hidden;
+    width: 100%;
+}
+
+.palette-example img {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
 }
 
 .palette-example .palette {
-    height: 100%;
-    width: 50px;
+    align-items: center;
+    background: #f4efe7;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
+    gap: 0.4rem;
+    justify-content: center;
+    padding: 0.7rem 0.45rem;
 }
 
 .palette-example .palette > div {
-    width: 40px;
-    height: 40px;
-    display: flex;
     background-image: url(../img/leather.png);
     background-position: center;
-    border-radius: 40px;
-    margin-bottom: 3px;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(23, 32, 38, 0.14);
+    height: 38px;
+    width: 38px;
 }

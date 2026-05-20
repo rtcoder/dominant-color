@@ -2,31 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Get dominant color - Music app</title>
+  <title>Dominant Color - Music app example</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header>
-  <ul>
-    <li><a href="/dominant-color/">Home</a></li>
-    <li><a href="/dominant-color/documentation.html">Documentation</a></li>
-    <li class='active'>
-      <a href="#">Examples</a>
+<header class="site-header">
+  <nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="/dominant-color/">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>Dominant Color</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dominant-color/">Home</a></li>
+      <li><a href="/dominant-color/documentation.html">Documentation</a></li>
+      <li class="active">
+        <a href="/dominant-color/examples/palette/">Examples</a>
       <ul>
-        <li><a href="/dominant-color/examples/palette">Palette</a></li>
-        <li class='active'><a href="/dominant-color/examples/music-app">Music app</a></li>
+        <li><a href="/dominant-color/examples/palette/">Palette</a></li>
+        <li class="active"><a href="/dominant-color/examples/music-app/">Music app</a></li>
       </ul>
     </li>
-    <li><a href='https://github.com/rtcoder/dominant-color/releases' target='_blank'>Download</a></li>
+    <li><a href="https://github.com/rtcoder/dominant-color/releases" target="_blank" rel="noreferrer">Download</a></li>
   </ul>
+  </nav>
 </header>
 
-<div class="container">
-  <h2>Music app example</h2>
+<main class="container">
+  <section class="demo-heading">
+    <div>
+      <p class="eyebrow">Adaptive UI demo</p>
+      <h1>Album art drives the interface.</h1>
+      <p>The player extracts colors from cover images and applies the palette to the controls and background.</p>
+    </div>
+    <a class="button button-secondary" href="/dominant-color/examples/palette/">Palette demo</a>
+  </section>
 
   <div class="music-app-example">
 
@@ -93,7 +105,11 @@
     </div>
 
   </div>
-</div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">Music app example using dynamic colors from album art.</div>
+</footer>
 
 <script type="module" src="js/index.js"></script>
 

@@ -2,31 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Get dominant color - examples</title>
+  <title>Dominant Color - Palette example</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header>
-  <ul>
-    <li><a href="/dominant-color/">Home</a></li>
-    <li><a href="/dominant-color/documentation.html">Documentation</a></li>
-    <li class='active'>
-      <a href="#">Examples</a>
+<header class="site-header">
+  <nav class="nav" aria-label="Primary navigation">
+    <a class="brand" href="/dominant-color/">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>Dominant Color</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dominant-color/">Home</a></li>
+      <li><a href="/dominant-color/documentation.html">Documentation</a></li>
+      <li class="active">
+        <a href="/dominant-color/examples/palette/">Examples</a>
       <ul>
-        <li class='active'><a href="/dominant-color/examples/palette">Palette</a></li>
-        <li><a href="/dominant-color/examples/music-app">Music app</a></li>
+        <li class="active"><a href="/dominant-color/examples/palette/">Palette</a></li>
+        <li><a href="/dominant-color/examples/music-app/">Music app</a></li>
       </ul>
     </li>
-    <li><a href='https://github.com/rtcoder/dominant-color/releases' target='_blank'>Download</a></li>
+    <li><a href="https://github.com/rtcoder/dominant-color/releases" target="_blank" rel="noreferrer">Download</a></li>
   </ul>
+  </nav>
 </header>
 
-<div class="container">
-  <h2>Palette example</h2>
+<main class="container">
+  <section class="demo-heading">
+    <div>
+      <p class="eyebrow">Palette demo</p>
+      <h1>Images with extracted palettes.</h1>
+      <p>Each card reads the image, detects a dominant color, and renders a compact palette beside the source.</p>
+    </div>
+    <a class="button button-secondary" href="/dominant-color/documentation.html">View API</a>
+  </section>
 
   <div class="palette-example">
     <div class="image-palette">
@@ -65,7 +77,11 @@
       <div class="palette"></div>
     </div>
   </div>
-</div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">Palette extraction example using the browser build.</div>
+</footer>
 
 <script type="module" src="js/index.js"></script>
 

@@ -3,6 +3,7 @@
 .music-app-example {
     display: flex;
     justify-content: center;
+    padding-bottom: 4rem;
 }
 
 .music-app-example .phone-container {
@@ -14,12 +15,13 @@
     width: 300px;
     height: 600px;
     display: flex;
-    border: 2px solid rgba(0, 0, 0, 0.3);
+    border: 8px solid #172026;
     padding: 10px;
-    border-radius: 30px;
+    border-radius: 34px;
     overflow: hidden;
     user-select: none;
     background: var(--app-dominant-color);
+    box-shadow: 0 22px 60px rgba(23, 32, 38, 0.24);
     transition: background 0.4s ease-in-out;
 }
 
@@ -29,7 +31,7 @@
     display: flex;
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 5px 5px 10px rgba(255, 255, 255, .2), -5px -5px 10px rgba(255, 255, 255, .2);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24);
 }
 
 .music-app-example .app .title {
@@ -57,7 +59,7 @@
 .music-app-example .slides-container {
     width: 100%;
     display: flex;
-    padding: 40px 0 10px;
+    padding: 26px 0 8px;
 }
 
 .music-app-example .slides {
@@ -88,6 +90,12 @@
     box-shadow: var(--shadow);
 }
 
+.music-app-example .slides .slide img {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
 .music-app-example .title,
 .music-app-example .author {
     width: 100%;
@@ -109,7 +117,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 25px 10px 20px;
+    padding: 18px 10px 14px;
 }
 
 .music-app-example .controls .progress {
@@ -183,7 +191,7 @@
     flex-direction: row;
     justify-content: space-around;
     align-items: flex-start;
-    margin-top: 50px;
+    margin-top: 42px;
 }
 
 .music-app-example .controls .buttons .play-pause,
@@ -213,7 +221,8 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    padding: 0 10px;
+    margin-top: auto;
+    padding: 0 10px 12px;
 }
 
 .music-app-example .app-footer .repeat,
@@ -232,6 +241,11 @@
     color: var(--app-triad-color-1);
     box-shadow: var(--shadow);
     transition: color 0.4s ease-in-out;
+}
+
+.music-app-example .material-icons {
+    font-size: 24px;
+    line-height: 1;
 }
 
 .music-app-example .app-header .back-button:active,

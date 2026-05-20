@@ -1,4 +1,4 @@
-import { getDominantColor } from '../../../dist/dominant-color.js';
+import { getDominantColor } from '../../../dist/esm/dominant-color.js';
 
 let currentVolume = 1;
 const songs = [];
@@ -493,4 +493,3 @@ fetch('./json/tracks.json')
     });
   });
 });
-
