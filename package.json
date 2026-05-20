@@ -18,6 +18,7 @@
   "scripts": {
     "build": "tsc",
     "test": "jest --config jestconfig.json",
+    "test:pack": "node scripts/pack-smoke-test.mjs",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
     "prepare": "npm run build",
