@@ -12,10 +12,10 @@ npm i @rtcoder/dominant-color
 
 ## Usage
 
-Import the `getDominantColor` function from `@rtcoder/dominant-color` in your JavaScript file:
+Import the `getDominantColor` or `getDominantColorAsync` function from `@rtcoder/dominant-color` in your JavaScript file:
 
 ```javascript
-import { getDominantColor } from "@rtcoder/dominant-color";
+import { getDominantColor, getDominantColorAsync } from "@rtcoder/dominant-color";
 ```
 
 Select an image element from your HTML:
@@ -31,7 +31,9 @@ getDominantColor(img, {
     downScaleFactor: 1,
     skipPixels: 0,
     colorsPaletteLength: 5,
+    colorBucketSize: 24,
     colorGroupingThreshold: 0,
+    colorQuantization: 'exact',
     paletteWithCountOfOccurrences: false,
     colorFormat: 'rgb',
     callback: (color, palette) => {
@@ -43,16 +45,27 @@ getDominantColor(img, {
 });
 ```
 
+You can also use the Promise-based API:
+
+```javascript
+const { dominant, colorsPalette } = await getDominantColorAsync(img, {
+    colorFormat: 'hex',
+    colorQuantization: 'bucket'
+});
+```
+
 ## Configuration Options
 
-The `getDominantColor` function accepts the following configuration options:
+The `getDominantColor` and `getDominantColorAsync` functions accept the following configuration options:
 
 | Name                        | Type     | Default Value | Description                                                  |
 | --------------------------- | -------- | ------------- | ------------------------------------------------------------ |
 | `downScaleFactor`           | number   | 1             | Factor of scale down for the image. Recommended for large images. |
 | `skipPixels`                | number   | 0             | Skips every `n` pixels while determining the dominant color. Recommended for large images. |
 | `colorsPaletteLength`       | number   | 5             | Length of the returned color palette.                        |
+| `colorBucketSize`           | number   | 24            | RGB bucket size used when `colorQuantization` is `'bucket'`. Smaller values keep more detail; larger values merge more colors. |
 | `colorGroupingThreshold`    | number   | 0             | Groups similar RGB colors before sorting. Use `0` for exact pixel matching, or a larger value such as `10`-`30` for photos. |
+| `colorQuantization`         | string   | `'exact'`     | Defines the color counting algorithm. Use `'exact'` for exact RGB matching or `'bucket'` for more stable photo palettes. |
 | `paletteWithCountOfOccurrences` | boolean  | false         | Determines whether to return colors with the number of occurrences. |
 | `colorFormat`               | string   | `'rgb'`       | Defines the format of the returned dominant color and palette colors. Available values are `'rgb'`, `'hsl'`, and `'hex'`. |
 | `callback`                  | function | [empty function] | Callback function that receives the dominant color and the colors palette. |
@@ -64,6 +77,7 @@ The library provides the following interfaces for type checking:
 
 ```typescript
 type ColorFormat = 'rgb' | 'hsl' | 'hex';
+type ColorQuantization = 'exact' | 'bucket';
 
 interface PrimaryColor {
   color: string;
@@ -74,7 +88,9 @@ interface DominantColorOptions {
   downScaleFactor: number;
   skipPixels: number;
   colorsPaletteLength: number;
+  colorBucketSize: number;
   colorGroupingThreshold: number;
+  colorQuantization: ColorQuantization;
   paletteWithCountOfOccurrences: boolean;
   colorFormat: ColorFormat;
   callback: DominantColorCallback;
@@ -84,7 +100,13 @@ interface DominantColorOptions {
 type DominantColorCallback = (dominant: string, colorsPalette: string[] | PrimaryColor[]) => void;
 type DominantColorErrorCallback = (error: Error) => void;
 
-function getDominantColor(element: HTMLImageElement, options: Partial<DominantColorOptions>): void;
+interface DominantColorResult {
+  dominant: string;
+  colorsPalette: string[] | PrimaryColor[];
+}
+
+function getDominantColor(element: HTMLImageElement, options?: Partial<DominantColorOptions>): void;
+function getDominantColorAsync(element: HTMLImageElement, options?: Partial<DominantColorOptions>): Promise<DominantColorResult>;
 ```
 
 Feel free to explore and utilize these interfaces for better code development.

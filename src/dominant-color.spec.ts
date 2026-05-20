@@ -1,4 +1,4 @@
-import { getDominantColor } from './dominant-color';
+import { getDominantColor, getDominantColorAsync } from './dominant-color';
 
 let pixels: Uint8ClampedArray;
 let shouldFailImageLoad = false;
@@ -136,6 +136,52 @@ it('groups similar colors when colorGroupingThreshold is provided', () => {
   expect(callback).toHaveBeenCalledWith('#fd0300', ['#fd0300', '#0000ff']);
 });
 
+it('quantizes colors into buckets when bucket quantization is enabled', () => {
+  pixels = new Uint8ClampedArray([
+    255,
+    0,
+    0,
+    255,
+    250,
+    5,
+    0,
+    255,
+    0,
+    0,
+    255,
+    255,
+  ]);
+  const callback = jest.fn();
+
+  getDominantColor({ src: 'image.jpg' } as HTMLImageElement, {
+    callback,
+    colorFormat: 'hex',
+    colorQuantization: 'bucket',
+    colorBucketSize: 24,
+    colorsPaletteLength: 2,
+  });
+
+  expect(callback).toHaveBeenCalledWith('#fc0c0c', ['#fc0c0c', '#0c0cfc']);
+});
+
+it('returns a promise result from getDominantColorAsync', async () => {
+  await expect(
+    getDominantColorAsync({ src: 'image.jpg' } as HTMLImageElement, {
+      colorFormat: 'hex',
+      colorsPaletteLength: 2,
+    }),
+  ).resolves.toEqual({
+    dominant: '#ff0000',
+    colorsPalette: ['#ff0000', '#0000ff'],
+  });
+});
+
+it('rejects getDominantColorAsync on image load errors', async () => {
+  shouldFailImageLoad = true;
+
+  await expect(getDominantColorAsync({ src: 'missing.jpg' } as HTMLImageElement)).rejects.toThrow('Unable to load image');
+});
+
 it('returns an empty result when all pixels are transparent', () => {
   pixels = new Uint8ClampedArray([255, 0, 0, 0, 0, 0, 255, 0]);
   const callback = jest.fn();
@@ -162,6 +208,14 @@ it('throws for invalid colorGroupingThreshold values before loading the image', 
       colorGroupingThreshold: -1,
     }),
   ).toThrow('colorGroupingThreshold must be a non-negative number');
+});
+
+it('throws for invalid colorQuantization values before loading the image', () => {
+  expect(() =>
+    getDominantColor({ src: 'image.jpg' } as HTMLImageElement, {
+      colorQuantization: 'median-cut' as any,
+    }),
+  ).toThrow('colorQuantization must be "exact" or "bucket"');
 });
 
 it('reports image load errors through errorCallback', () => {

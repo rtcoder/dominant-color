@@ -1,4 +1,15 @@
-import { ColorFormat, Colors, DominantColorOptions, PrimaryColor } from './interface';
+import { ColorFormat, Colors, DominantColorOptions, DominantColorResult, PrimaryColor } from './interface';
+
+export type {
+  ColorFormat,
+  ColorQuantization,
+  Colors,
+  DominantColorCallback,
+  DominantColorErrorCallback,
+  DominantColorOptions,
+  DominantColorResult,
+  PrimaryColor,
+} from './interface';
 
 interface ColorGroup {
   b: number;
@@ -55,6 +66,28 @@ function toRgbKey(r: number, g: number, b: number): string {
   return `${Math.round(r)},${Math.round(g)},${Math.round(b)}`;
 }
 
+function quantizeColor(color: string, bucketSize: number): string {
+  const [r, g, b] = getRgbValues(color);
+  const maxColorValue = 255;
+  return toRgbKey(
+    Math.min(maxColorValue, Math.floor(r / bucketSize) * bucketSize + bucketSize / 2),
+    Math.min(maxColorValue, Math.floor(g / bucketSize) * bucketSize + bucketSize / 2),
+    Math.min(maxColorValue, Math.floor(b / bucketSize) * bucketSize + bucketSize / 2),
+  );
+}
+
+function quantizeColors(colors: Colors, config: DominantColorOptions): Colors {
+  if (config.colorQuantization === 'exact') {
+    return colors;
+  }
+
+  return Object.keys(colors).reduce((quantizedColors, color) => {
+    const quantizedColor = quantizeColor(color, config.colorBucketSize);
+    quantizedColors[quantizedColor] = (quantizedColors[quantizedColor] || 0) + colors[color];
+    return quantizedColors;
+  }, {} as Colors);
+}
+
 function getColorDistanceSquared(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): number {
   return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
 }
@@ -90,13 +123,13 @@ function groupColors(colors: Colors, threshold: number): Colors {
   }, {} as Colors);
 }
 
-function detectColor(imageData: ImageData, skip = 0, colorGroupingThreshold = 0): [PrimaryColor, Colors] {
+function detectColor(imageData: ImageData, config: DominantColorOptions): [PrimaryColor, Colors] {
   const { data } = imageData;
   const colors: Colors = {};
   let primaryColor = '';
   let maxCount = 0;
 
-  for (let px = 0; px < data.length; px += (skip + 1) * 4) {
+  for (let px = 0; px < data.length; px += (config.skipPixels + 1) * 4) {
     if (data[px + 3] < 255) {
       continue; // Ignore transparent pixels
     }
@@ -108,7 +141,8 @@ function detectColor(imageData: ImageData, skip = 0, colorGroupingThreshold = 0)
     }
   }
 
-  const groupedColors = groupColors(colors, colorGroupingThreshold);
+  const quantizedColors = quantizeColors(colors, config);
+  const groupedColors = groupColors(quantizedColors, config.colorGroupingThreshold);
   primaryColor = '';
   maxCount = 0;
   Object.keys(groupedColors).forEach((color) => {
@@ -182,29 +216,63 @@ function validateOptions(config: DominantColorOptions): void {
   if (!Number.isInteger(config.colorsPaletteLength) || config.colorsPaletteLength < 0) {
     throw new Error('colorsPaletteLength must be a non-negative integer');
   }
+  if (!Number.isInteger(config.colorBucketSize) || config.colorBucketSize < 1 || config.colorBucketSize > 256) {
+    throw new Error('colorBucketSize must be an integer between 1 and 256');
+  }
   if (!Number.isFinite(config.colorGroupingThreshold) || config.colorGroupingThreshold < 0) {
     throw new Error('colorGroupingThreshold must be a non-negative number');
   }
+  if (!['exact', 'bucket'].includes(config.colorQuantization)) {
+    throw new Error('colorQuantization must be "exact" or "bucket"');
+  }
+}
+
+const defaultOptions: DominantColorOptions = {
+  downScaleFactor: 1,
+  skipPixels: 0,
+  colorsPaletteLength: 5,
+  colorBucketSize: 24,
+  colorGroupingThreshold: 0,
+  colorQuantization: 'exact',
+  paletteWithCountOfOccurrences: false,
+  colorFormat: 'rgb',
+  callback: () => {
+    // callback
+  },
+  errorCallback: () => {
+    // error callback
+  },
+};
+
+function getDominantColorConfig(options: Partial<DominantColorOptions>): DominantColorOptions {
+  const config: DominantColorOptions = { ...defaultOptions, ...options };
+  validateOptions(config);
+  return config;
 }
 
 export function getDominantColor(element: HTMLImageElement, options: Partial<DominantColorOptions> = {}): void {
-  const defaultOptions: DominantColorOptions = {
-    downScaleFactor: 1,
-    skipPixels: 0,
-    colorsPaletteLength: 5,
-    colorGroupingThreshold: 0,
-    paletteWithCountOfOccurrences: false,
-    colorFormat: 'rgb',
-    callback: () => {
-      // callback
-    },
-    errorCallback: () => {
-      // error callback
-    },
-  };
-  const config: DominantColorOptions = { ...defaultOptions, ...options };
-  validateOptions(config);
+  const config = getDominantColorConfig(options);
+  processDominantColor(element, config);
+}
 
+export function getDominantColorAsync(
+  element: HTMLImageElement,
+  options: Partial<DominantColorOptions> = {},
+): Promise<DominantColorResult> {
+  return new Promise((resolve, reject) => {
+    const config = getDominantColorConfig({
+      ...options,
+      callback: (dominant, colorsPalette) => {
+        resolve({ dominant, colorsPalette });
+      },
+      errorCallback: reject,
+    });
+
+    processDominantColor(element, config);
+  });
+}
+
+function processDominantColor(element: HTMLImageElement, config: DominantColorOptions): void {
   const source = element.currentSrc || element.src;
   if (!source) {
     config.errorCallback(new Error('Image source is empty'));
@@ -216,7 +284,7 @@ export function getDominantColor(element: HTMLImageElement, options: Partial<Dom
   img.onload = () => {
     try {
       const imageData = getImageData(img, config.downScaleFactor);
-      const [primaryColor, colors] = detectColor(imageData, config.skipPixels, config.colorGroupingThreshold);
+      const [primaryColor, colors] = detectColor(imageData, config);
       const colorsPalette = config.colorsPaletteLength
         ? sortColors(colors, config.paletteWithCountOfOccurrences).slice(0, config.colorsPaletteLength)
         : [];

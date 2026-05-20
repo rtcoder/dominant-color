@@ -2,8 +2,19 @@
   "name": "@rtcoder/dominant-color",
   "version": "0.1.4",
   "description": "Get dominant color and palette of colors from an image",
+  "type": "module",
   "main": "dist/dominant-color.js",
+  "module": "dist/dominant-color.js",
   "types": "dist/dominant-color.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/dominant-color.d.ts",
+      "import": "./dist/dominant-color.js",
+      "default": "./dist/dominant-color.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "test": "jest --config jestconfig.json",
