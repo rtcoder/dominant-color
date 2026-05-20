@@ -6,7 +6,6 @@ import { join } from 'node:path';
 const rootDir = new URL('..', import.meta.url).pathname;
 const tempDir = mkdtempSync(join(tmpdir(), 'dominant-color-pack-'));
 const cacheDir = join(tempDir, 'npm-cache');
-const packageDir = join(tempDir, 'package-consumer');
 
 function run(command, args, options = {}) {
   execFileSync(command, args, {
@@ -51,6 +50,18 @@ try {
     ].join('\n'),
   );
   run('node', [join(tempDir, 'runtime-smoke.mjs')], { cwd: tempDir });
+
+  writeFileSync(
+    join(tempDir, 'runtime-smoke.cjs'),
+    [
+      "const { getDominantColor, getDominantColorAsync } = require('@rtcoder/dominant-color');",
+      "if (typeof getDominantColor !== 'function') throw new Error('getDominantColor is not exported');",
+      "if (typeof getDominantColorAsync !== 'function') throw new Error('getDominantColorAsync is not exported');",
+      "console.log('runtime require smoke passed');",
+      '',
+    ].join('\n'),
+  );
+  run('node', [join(tempDir, 'runtime-smoke.cjs')], { cwd: tempDir });
 
   writeFileSync(
     join(tempDir, 'type-smoke.ts'),

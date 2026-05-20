@@ -1,4 +1,4 @@
-import { getDominantColor } from '../../../dist/dominant-color.js';
+import { getDominantColor } from '../../../dist/esm/dominant-color.js';
 
 function shift_color([r, g, b], val, percent) {
   return '#' +

@@ -1,4 +1,4 @@
-import { getDominantColor } from '../dist/dominant-color.js';
+import { getDominantColor } from '../dist/esm/dominant-color.js';
 
 const dropArea = document.getElementById('drop-area');
 
