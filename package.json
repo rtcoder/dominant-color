@@ -1,6 +1,6 @@
 {
   "name": "@rtcoder/dominant-color",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Get dominant color and palette of colors from an image",
   "type": "module",
   "main": "dist/cjs/dominant-color.js",
