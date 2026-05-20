@@ -1,5 +1,6 @@
 export type ColorFormat = 'rgb' | 'hsl' | 'hex';
-export type ColorQuantization = 'exact' | 'bucket';
+export type ColorQuantization = 'exact' | 'bucket' | 'median-cut';
+export type DominantColorSource = HTMLImageElement | HTMLCanvasElement | ImageBitmap | string | Blob;
 
 export interface PrimaryColor {
   color: string;

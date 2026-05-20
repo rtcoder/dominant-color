@@ -1,4 +1,4 @@
-import { ColorFormat, Colors, DominantColorOptions, DominantColorResult, PrimaryColor } from './interface';
+import { ColorFormat, Colors, DominantColorOptions, DominantColorResult, DominantColorSource, PrimaryColor } from './interface';
 
 export type {
   ColorFormat,
@@ -8,6 +8,7 @@ export type {
   DominantColorErrorCallback,
   DominantColorOptions,
   DominantColorResult,
+  DominantColorSource,
   PrimaryColor,
 } from './interface';
 
@@ -17,6 +18,15 @@ interface ColorGroup {
   g: number;
   r: number;
 }
+
+interface MedianCutColor {
+  b: number;
+  count: number;
+  g: number;
+  r: number;
+}
+
+type DrawableDominantColorSource = HTMLImageElement | HTMLCanvasElement | ImageBitmap;
 
 function rgbToHex(rgb: string): string {
   const [_r, _g, _b] = getRgbValues(rgb).map((val) => val.toString(16).padStart(2, '0'));
@@ -77,7 +87,7 @@ function quantizeColor(color: string, bucketSize: number): string {
 }
 
 function quantizeColors(colors: Colors, config: DominantColorOptions): Colors {
-  if (config.colorQuantization === 'exact') {
+  if (config.colorQuantization !== 'bucket') {
     return colors;
   }
 
@@ -85,6 +95,92 @@ function quantizeColors(colors: Colors, config: DominantColorOptions): Colors {
     const quantizedColor = quantizeColor(color, config.colorBucketSize);
     quantizedColors[quantizedColor] = (quantizedColors[quantizedColor] || 0) + colors[color];
     return quantizedColors;
+  }, {} as Colors);
+}
+
+function getMedianCutRange(colors: MedianCutColor[], channel: 'r' | 'g' | 'b'): number {
+  return Math.max(...colors.map((color) => color[channel])) - Math.min(...colors.map((color) => color[channel]));
+}
+
+function getMedianCutChannel(colors: MedianCutColor[]): 'r' | 'g' | 'b' {
+  const ranges = {
+    b: getMedianCutRange(colors, 'b'),
+    g: getMedianCutRange(colors, 'g'),
+    r: getMedianCutRange(colors, 'r'),
+  };
+  return Object.keys(ranges).sort((a, b) => ranges[b as 'r' | 'g' | 'b'] - ranges[a as 'r' | 'g' | 'b'])[0] as 'r' | 'g' | 'b';
+}
+
+function splitMedianCutBox(colors: MedianCutColor[]): MedianCutColor[][] {
+  if (colors.length <= 1) {
+    return [colors];
+  }
+
+  const channel = getMedianCutChannel(colors);
+  const sorted = [...colors].sort((a, b) => a[channel] - b[channel]);
+  const totalCount = sorted.reduce((sum, color) => sum + color.count, 0);
+  let runningCount = 0;
+  let splitIndex = 1;
+
+  for (let index = 0; index < sorted.length - 1; index++) {
+    runningCount += sorted[index].count;
+    if (runningCount >= totalCount / 2) {
+      splitIndex = index + 1;
+      break;
+    }
+  }
+
+  return [sorted.slice(0, splitIndex), sorted.slice(splitIndex)];
+}
+
+function averageMedianCutBox(colors: MedianCutColor[]): PrimaryColor {
+  const totalCount = colors.reduce((sum, color) => sum + color.count, 0);
+  const weighted = colors.reduce(
+    (sum, color) => ({
+      b: sum.b + color.b * color.count,
+      g: sum.g + color.g * color.count,
+      r: sum.r + color.r * color.count,
+    }),
+    { b: 0, g: 0, r: 0 },
+  );
+
+  return {
+    color: toRgbKey(weighted.r / totalCount, weighted.g / totalCount, weighted.b / totalCount),
+    count: totalCount,
+  };
+}
+
+function medianCutColors(colors: Colors, paletteLength: number): Colors {
+  if (paletteLength === 0) {
+    return {};
+  }
+
+  let boxes = [
+    Object.keys(colors).map((color) => {
+      const [r, g, b] = getRgbValues(color);
+      return { r, g, b, count: colors[color] };
+    }),
+  ];
+
+  while (boxes.length < paletteLength) {
+    const sortedBoxes = [...boxes].sort((a, b) => {
+      const aRange = Math.max(getMedianCutRange(a, 'r'), getMedianCutRange(a, 'g'), getMedianCutRange(a, 'b'));
+      const bRange = Math.max(getMedianCutRange(b, 'r'), getMedianCutRange(b, 'g'), getMedianCutRange(b, 'b'));
+      return bRange * b.reduce((sum, color) => sum + color.count, 0) - aRange * a.reduce((sum, color) => sum + color.count, 0);
+    });
+    const boxToSplit = sortedBoxes.find((box) => box.length > 1);
+    if (!boxToSplit) {
+      break;
+    }
+
+    const splitBoxes = splitMedianCutBox(boxToSplit).filter((box) => box.length);
+    boxes = boxes.filter((box) => box !== boxToSplit).concat(splitBoxes);
+  }
+
+  return boxes.reduce((palette, box) => {
+    const color = averageMedianCutBox(box);
+    palette[color.color] = (palette[color.color] || 0) + color.count;
+    return palette;
   }, {} as Colors);
 }
 
@@ -143,23 +239,33 @@ function detectColor(imageData: ImageData, config: DominantColorOptions): [Prima
 
   const quantizedColors = quantizeColors(colors, config);
   const groupedColors = groupColors(quantizedColors, config.colorGroupingThreshold);
+  const paletteColors =
+    config.colorQuantization === 'median-cut' ? medianCutColors(groupedColors, config.colorsPaletteLength || 1) : groupedColors;
   primaryColor = '';
   maxCount = 0;
-  Object.keys(groupedColors).forEach((color) => {
-    if (groupedColors[color] > maxCount) {
+  Object.keys(paletteColors).forEach((color) => {
+    if (paletteColors[color] > maxCount) {
       primaryColor = color;
-      maxCount = groupedColors[color];
+      maxCount = paletteColors[color];
     }
   });
 
-  return [{ color: primaryColor, count: maxCount }, groupedColors];
+  return [{ color: primaryColor, count: maxCount }, paletteColors];
 }
 
-function getImageData(img: HTMLImageElement, downScaleFactor = 1): ImageData {
+function getSourceWidth(source: DrawableDominantColorSource): number {
+  return source.width;
+}
+
+function getSourceHeight(source: DrawableDominantColorSource): number {
+  return source.height;
+}
+
+function getImageData(source: DrawableDominantColorSource, downScaleFactor = 1): ImageData {
   const canvas = document.createElement('canvas') as HTMLCanvasElement;
   const context = canvas.getContext('2d');
-  const scaledWidth = Math.max(1, Math.floor(img.width / downScaleFactor));
-  const scaledHeight = Math.max(1, Math.floor(img.height / downScaleFactor));
+  const scaledWidth = Math.max(1, Math.floor(getSourceWidth(source) / downScaleFactor));
+  const scaledHeight = Math.max(1, Math.floor(getSourceHeight(source) / downScaleFactor));
 
   if (!context) {
     throw new Error('Canvas 2D context is not available');
@@ -167,7 +273,7 @@ function getImageData(img: HTMLImageElement, downScaleFactor = 1): ImageData {
 
   canvas.width = scaledWidth;
   canvas.height = scaledHeight;
-  context.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+  context.drawImage(source, 0, 0, scaledWidth, scaledHeight);
   return context.getImageData(0, 0, scaledWidth, scaledHeight);
 }
 
@@ -222,8 +328,8 @@ function validateOptions(config: DominantColorOptions): void {
   if (!Number.isFinite(config.colorGroupingThreshold) || config.colorGroupingThreshold < 0) {
     throw new Error('colorGroupingThreshold must be a non-negative number');
   }
-  if (!['exact', 'bucket'].includes(config.colorQuantization)) {
-    throw new Error('colorQuantization must be "exact" or "bucket"');
+  if (!['exact', 'bucket', 'median-cut'].includes(config.colorQuantization)) {
+    throw new Error('colorQuantization must be "exact", "bucket", or "median-cut"');
   }
 }
 
@@ -250,13 +356,13 @@ function getDominantColorConfig(options: Partial<DominantColorOptions>): Dominan
   return config;
 }
 
-export function getDominantColor(element: HTMLImageElement, options: Partial<DominantColorOptions> = {}): void {
+export function getDominantColor(source: DominantColorSource, options: Partial<DominantColorOptions> = {}): void {
   const config = getDominantColorConfig(options);
-  processDominantColor(element, config);
+  processDominantColor(source, config);
 }
 
 export function getDominantColorAsync(
-  element: HTMLImageElement,
+  source: DominantColorSource,
   options: Partial<DominantColorOptions> = {},
 ): Promise<DominantColorResult> {
   return new Promise((resolve, reject) => {
@@ -268,41 +374,76 @@ export function getDominantColorAsync(
       errorCallback: reject,
     });
 
-    processDominantColor(element, config);
+    processDominantColor(source, config);
   });
 }
 
-function processDominantColor(element: HTMLImageElement, config: DominantColorOptions): void {
-  const source = element.currentSrc || element.src;
-  if (!source) {
+function handleImageData(imageData: ImageData, config: DominantColorOptions): void {
+  const [primaryColor, colors] = detectColor(imageData, config);
+  const colorsPalette = config.colorsPaletteLength
+    ? sortColors(colors, config.paletteWithCountOfOccurrences).slice(0, config.colorsPaletteLength)
+    : [];
+
+  if (!primaryColor.color) {
+    config.callback('', []);
+    return;
+  }
+
+  const dominant = getColorByFormat(primaryColor.color, config.colorFormat);
+  config.callback(dominant, formatPalette(colorsPalette, config.colorFormat));
+}
+
+function isCanvasSource(source: DominantColorSource): source is HTMLCanvasElement | ImageBitmap {
+  return typeof source !== 'string' && typeof Blob !== 'undefined' && !(source instanceof Blob) && !('src' in source);
+}
+
+function getImageSource(source: HTMLImageElement | string | Blob): string {
+  if (typeof source === 'string') {
+    return source;
+  }
+  if (typeof Blob !== 'undefined' && source instanceof Blob) {
+    return URL.createObjectURL(source);
+  }
+  const element = source as HTMLImageElement;
+  return element.currentSrc || element.src;
+}
+
+function processDominantColor(source: DominantColorSource, config: DominantColorOptions): void {
+  if (isCanvasSource(source)) {
+    try {
+      handleImageData(getImageData(source, config.downScaleFactor), config);
+    } catch (error) {
+      config.errorCallback(error instanceof Error ? error : new Error(String(error)));
+    }
+    return;
+  }
+
+  const imageSource = getImageSource(source);
+  if (!imageSource) {
     config.errorCallback(new Error('Image source is empty'));
     return;
   }
+  const shouldRevokeObjectUrl = typeof Blob !== 'undefined' && source instanceof Blob;
 
   const img = new Image();
   img.crossOrigin = 'Anonymous';
   img.onload = () => {
     try {
-      const imageData = getImageData(img, config.downScaleFactor);
-      const [primaryColor, colors] = detectColor(imageData, config);
-      const colorsPalette = config.colorsPaletteLength
-        ? sortColors(colors, config.paletteWithCountOfOccurrences).slice(0, config.colorsPaletteLength)
-        : [];
-
-      if (!primaryColor.color) {
-        config.callback('', []);
-        return;
-      }
-
-      const dominant = getColorByFormat(primaryColor.color, config.colorFormat);
-      config.callback(dominant, formatPalette(colorsPalette, config.colorFormat));
+      handleImageData(getImageData(img, config.downScaleFactor), config);
     } catch (error) {
       config.errorCallback(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      if (shouldRevokeObjectUrl) {
+        URL.revokeObjectURL(imageSource);
+      }
     }
   };
   img.onerror = () => {
-    config.errorCallback(new Error(`Unable to load image: ${source}`));
+    if (shouldRevokeObjectUrl) {
+      URL.revokeObjectURL(imageSource);
+    }
+    config.errorCallback(new Error(`Unable to load image: ${imageSource}`));
   };
 
-  img.src = source;
+  img.src = imageSource;
 }

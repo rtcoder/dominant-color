@@ -46,13 +46,83 @@ function quantizeColor(color, bucketSize) {
     return toRgbKey(Math.min(maxColorValue, Math.floor(r / bucketSize) * bucketSize + bucketSize / 2), Math.min(maxColorValue, Math.floor(g / bucketSize) * bucketSize + bucketSize / 2), Math.min(maxColorValue, Math.floor(b / bucketSize) * bucketSize + bucketSize / 2));
 }
 function quantizeColors(colors, config) {
-    if (config.colorQuantization === 'exact') {
+    if (config.colorQuantization !== 'bucket') {
         return colors;
     }
     return Object.keys(colors).reduce((quantizedColors, color) => {
         const quantizedColor = quantizeColor(color, config.colorBucketSize);
         quantizedColors[quantizedColor] = (quantizedColors[quantizedColor] || 0) + colors[color];
         return quantizedColors;
+    }, {});
+}
+function getMedianCutRange(colors, channel) {
+    return Math.max(...colors.map((color) => color[channel])) - Math.min(...colors.map((color) => color[channel]));
+}
+function getMedianCutChannel(colors) {
+    const ranges = {
+        b: getMedianCutRange(colors, 'b'),
+        g: getMedianCutRange(colors, 'g'),
+        r: getMedianCutRange(colors, 'r'),
+    };
+    return Object.keys(ranges).sort((a, b) => ranges[b] - ranges[a])[0];
+}
+function splitMedianCutBox(colors) {
+    if (colors.length <= 1) {
+        return [colors];
+    }
+    const channel = getMedianCutChannel(colors);
+    const sorted = [...colors].sort((a, b) => a[channel] - b[channel]);
+    const totalCount = sorted.reduce((sum, color) => sum + color.count, 0);
+    let runningCount = 0;
+    let splitIndex = 1;
+    for (let index = 0; index < sorted.length - 1; index++) {
+        runningCount += sorted[index].count;
+        if (runningCount >= totalCount / 2) {
+            splitIndex = index + 1;
+            break;
+        }
+    }
+    return [sorted.slice(0, splitIndex), sorted.slice(splitIndex)];
+}
+function averageMedianCutBox(colors) {
+    const totalCount = colors.reduce((sum, color) => sum + color.count, 0);
+    const weighted = colors.reduce((sum, color) => ({
+        b: sum.b + color.b * color.count,
+        g: sum.g + color.g * color.count,
+        r: sum.r + color.r * color.count,
+    }), { b: 0, g: 0, r: 0 });
+    return {
+        color: toRgbKey(weighted.r / totalCount, weighted.g / totalCount, weighted.b / totalCount),
+        count: totalCount,
+    };
+}
+function medianCutColors(colors, paletteLength) {
+    if (paletteLength === 0) {
+        return {};
+    }
+    let boxes = [
+        Object.keys(colors).map((color) => {
+            const [r, g, b] = getRgbValues(color);
+            return { r, g, b, count: colors[color] };
+        }),
+    ];
+    while (boxes.length < paletteLength) {
+        const sortedBoxes = [...boxes].sort((a, b) => {
+            const aRange = Math.max(getMedianCutRange(a, 'r'), getMedianCutRange(a, 'g'), getMedianCutRange(a, 'b'));
+            const bRange = Math.max(getMedianCutRange(b, 'r'), getMedianCutRange(b, 'g'), getMedianCutRange(b, 'b'));
+            return bRange * b.reduce((sum, color) => sum + color.count, 0) - aRange * a.reduce((sum, color) => sum + color.count, 0);
+        });
+        const boxToSplit = sortedBoxes.find((box) => box.length > 1);
+        if (!boxToSplit) {
+            break;
+        }
+        const splitBoxes = splitMedianCutBox(boxToSplit).filter((box) => box.length);
+        boxes = boxes.filter((box) => box !== boxToSplit).concat(splitBoxes);
+    }
+    return boxes.reduce((palette, box) => {
+        const color = averageMedianCutBox(box);
+        palette[color.color] = (palette[color.color] || 0) + color.count;
+        return palette;
     }, {});
 }
 function getColorDistanceSquared(r1, g1, b1, r2, g2, b2) {
@@ -101,27 +171,34 @@ function detectColor(imageData, config) {
     }
     const quantizedColors = quantizeColors(colors, config);
     const groupedColors = groupColors(quantizedColors, config.colorGroupingThreshold);
+    const paletteColors = config.colorQuantization === 'median-cut' ? medianCutColors(groupedColors, config.colorsPaletteLength || 1) : groupedColors;
     primaryColor = '';
     maxCount = 0;
-    Object.keys(groupedColors).forEach((color) => {
-        if (groupedColors[color] > maxCount) {
+    Object.keys(paletteColors).forEach((color) => {
+        if (paletteColors[color] > maxCount) {
             primaryColor = color;
-            maxCount = groupedColors[color];
+            maxCount = paletteColors[color];
         }
     });
-    return [{ color: primaryColor, count: maxCount }, groupedColors];
+    return [{ color: primaryColor, count: maxCount }, paletteColors];
 }
-function getImageData(img, downScaleFactor = 1) {
+function getSourceWidth(source) {
+    return source.width;
+}
+function getSourceHeight(source) {
+    return source.height;
+}
+function getImageData(source, downScaleFactor = 1) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    const scaledWidth = Math.max(1, Math.floor(img.width / downScaleFactor));
-    const scaledHeight = Math.max(1, Math.floor(img.height / downScaleFactor));
+    const scaledWidth = Math.max(1, Math.floor(getSourceWidth(source) / downScaleFactor));
+    const scaledHeight = Math.max(1, Math.floor(getSourceHeight(source) / downScaleFactor));
     if (!context) {
         throw new Error('Canvas 2D context is not available');
     }
     canvas.width = scaledWidth;
     canvas.height = scaledHeight;
-    context.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+    context.drawImage(source, 0, 0, scaledWidth, scaledHeight);
     return context.getImageData(0, 0, scaledWidth, scaledHeight);
 }
 function sortColors(colors, withOccurrences = false) {
@@ -169,8 +246,8 @@ function validateOptions(config) {
     if (!Number.isFinite(config.colorGroupingThreshold) || config.colorGroupingThreshold < 0) {
         throw new Error('colorGroupingThreshold must be a non-negative number');
     }
-    if (!['exact', 'bucket'].includes(config.colorQuantization)) {
-        throw new Error('colorQuantization must be "exact" or "bucket"');
+    if (!['exact', 'bucket', 'median-cut'].includes(config.colorQuantization)) {
+        throw new Error('colorQuantization must be "exact", "bucket", or "median-cut"');
     }
 }
 const defaultOptions = {
@@ -194,47 +271,80 @@ function getDominantColorConfig(options) {
     validateOptions(config);
     return config;
 }
-export function getDominantColor(element, options = {}) {
+export function getDominantColor(source, options = {}) {
     const config = getDominantColorConfig(options);
-    processDominantColor(element, config);
+    processDominantColor(source, config);
 }
-export function getDominantColorAsync(element, options = {}) {
+export function getDominantColorAsync(source, options = {}) {
     return new Promise((resolve, reject) => {
         const config = getDominantColorConfig(Object.assign(Object.assign({}, options), { callback: (dominant, colorsPalette) => {
                 resolve({ dominant, colorsPalette });
             }, errorCallback: reject }));
-        processDominantColor(element, config);
+        processDominantColor(source, config);
     });
 }
-function processDominantColor(element, config) {
-    const source = element.currentSrc || element.src;
-    if (!source) {
-        config.errorCallback(new Error('Image source is empty'));
+function handleImageData(imageData, config) {
+    const [primaryColor, colors] = detectColor(imageData, config);
+    const colorsPalette = config.colorsPaletteLength
+        ? sortColors(colors, config.paletteWithCountOfOccurrences).slice(0, config.colorsPaletteLength)
+        : [];
+    if (!primaryColor.color) {
+        config.callback('', []);
         return;
     }
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => {
+    const dominant = getColorByFormat(primaryColor.color, config.colorFormat);
+    config.callback(dominant, formatPalette(colorsPalette, config.colorFormat));
+}
+function isCanvasSource(source) {
+    return typeof source !== 'string' && typeof Blob !== 'undefined' && !(source instanceof Blob) && !('src' in source);
+}
+function getImageSource(source) {
+    if (typeof source === 'string') {
+        return source;
+    }
+    if (typeof Blob !== 'undefined' && source instanceof Blob) {
+        return URL.createObjectURL(source);
+    }
+    const element = source;
+    return element.currentSrc || element.src;
+}
+function processDominantColor(source, config) {
+    if (isCanvasSource(source)) {
         try {
-            const imageData = getImageData(img, config.downScaleFactor);
-            const [primaryColor, colors] = detectColor(imageData, config);
-            const colorsPalette = config.colorsPaletteLength
-                ? sortColors(colors, config.paletteWithCountOfOccurrences).slice(0, config.colorsPaletteLength)
-                : [];
-            if (!primaryColor.color) {
-                config.callback('', []);
-                return;
-            }
-            const dominant = getColorByFormat(primaryColor.color, config.colorFormat);
-            config.callback(dominant, formatPalette(colorsPalette, config.colorFormat));
+            handleImageData(getImageData(source, config.downScaleFactor), config);
         }
         catch (error) {
             config.errorCallback(error instanceof Error ? error : new Error(String(error)));
         }
+        return;
+    }
+    const imageSource = getImageSource(source);
+    if (!imageSource) {
+        config.errorCallback(new Error('Image source is empty'));
+        return;
+    }
+    const shouldRevokeObjectUrl = typeof Blob !== 'undefined' && source instanceof Blob;
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+        try {
+            handleImageData(getImageData(img, config.downScaleFactor), config);
+        }
+        catch (error) {
+            config.errorCallback(error instanceof Error ? error : new Error(String(error)));
+        }
+        finally {
+            if (shouldRevokeObjectUrl) {
+                URL.revokeObjectURL(imageSource);
+            }
+        }
     };
     img.onerror = () => {
-        config.errorCallback(new Error(`Unable to load image: ${source}`));
+        if (shouldRevokeObjectUrl) {
+            URL.revokeObjectURL(imageSource);
+        }
+        config.errorCallback(new Error(`Unable to load image: ${imageSource}`));
     };
-    img.src = source;
+    img.src = imageSource;
 }
 //# sourceMappingURL=dominant-color.js.map

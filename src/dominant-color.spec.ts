@@ -2,6 +2,8 @@ import { getDominantColor, getDominantColorAsync } from './dominant-color';
 
 let pixels: Uint8ClampedArray;
 let shouldFailImageLoad = false;
+let createObjectURL: jest.Mock;
+let revokeObjectURL: jest.Mock;
 
 class MockImage {
   public crossOrigin = '';
@@ -69,6 +71,13 @@ beforeEach(() => {
   ]);
   mockCanvas();
   (global as any).Image = MockImage;
+  createObjectURL = jest.fn(() => 'blob:image');
+  revokeObjectURL = jest.fn();
+  (global as any).URL = {
+    createObjectURL,
+    revokeObjectURL,
+  };
+  (global as any).Blob = class MockBlob {};
 });
 
 it('returns dominant color and palette in the requested format', () => {
@@ -81,6 +90,45 @@ it('returns dominant color and palette in the requested format', () => {
   });
 
   expect(callback).toHaveBeenCalledWith('#ff0000', ['#ff0000', '#0000ff']);
+});
+
+it('accepts a string image source', () => {
+  const callback = jest.fn();
+
+  getDominantColor('image.jpg', {
+    callback,
+    colorFormat: 'hex',
+    colorsPaletteLength: 1,
+  });
+
+  expect(callback).toHaveBeenCalledWith('#ff0000', ['#ff0000']);
+});
+
+it('accepts canvas-like sources without loading a new image', () => {
+  const callback = jest.fn();
+  const canvas = { height: 2, width: 2 } as HTMLCanvasElement;
+
+  getDominantColor(canvas, {
+    callback,
+    colorFormat: 'hex',
+    colorsPaletteLength: 1,
+  });
+
+  expect(callback).toHaveBeenCalledWith('#ff0000', ['#ff0000']);
+});
+
+it('accepts blob sources and revokes generated object URLs', () => {
+  const callback = jest.fn();
+  const blob = new Blob();
+
+  getDominantColor(blob, {
+    callback,
+    colorsPaletteLength: 1,
+  });
+
+  expect(createObjectURL).toHaveBeenCalledWith(blob);
+  expect(revokeObjectURL).toHaveBeenCalledWith('blob:image');
+  expect(callback).toHaveBeenCalledWith('rgb(255,0,0)', ['rgb(255,0,0)']);
 });
 
 it('uses default options when they are not provided', () => {
@@ -164,6 +212,37 @@ it('quantizes colors into buckets when bucket quantization is enabled', () => {
   expect(callback).toHaveBeenCalledWith('#fc0c0c', ['#fc0c0c', '#0c0cfc']);
 });
 
+it('uses median-cut quantization for a balanced photo-like palette', () => {
+  pixels = new Uint8ClampedArray([
+    240,
+    10,
+    10,
+    255,
+    220,
+    30,
+    20,
+    255,
+    10,
+    20,
+    240,
+    255,
+    20,
+    30,
+    220,
+    255,
+  ]);
+  const callback = jest.fn();
+
+  getDominantColor('image.jpg', {
+    callback,
+    colorFormat: 'hex',
+    colorQuantization: 'median-cut',
+    colorsPaletteLength: 2,
+  });
+
+  expect(callback).toHaveBeenCalledWith('#e6140f', ['#e6140f', '#0f19e6']);
+});
+
 it('returns a promise result from getDominantColorAsync', async () => {
   await expect(
     getDominantColorAsync({ src: 'image.jpg' } as HTMLImageElement, {
@@ -213,9 +292,9 @@ it('throws for invalid colorGroupingThreshold values before loading the image', 
 it('throws for invalid colorQuantization values before loading the image', () => {
   expect(() =>
     getDominantColor({ src: 'image.jpg' } as HTMLImageElement, {
-      colorQuantization: 'median-cut' as any,
+      colorQuantization: 'octree' as any,
     }),
-  ).toThrow('colorQuantization must be "exact" or "bucket"');
+  ).toThrow('colorQuantization must be "exact", "bucket", or "median-cut"');
 });
 
 it('reports image load errors through errorCallback', () => {
